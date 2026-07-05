@@ -36,12 +36,6 @@ h1 span{color:var(--accent)}
 .tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Inter',sans-serif;font-size:.71rem;font-weight:600;cursor:pointer;transition:all .15s}
 .tab:hover{border-color:var(--accent2);color:var(--accent2)}
 .tab.active{background:var(--accent2);border-color:var(--accent2);color:#fff}
-.filter-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:9px 20px 4px}
-.chip{display:flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Inter',sans-serif;font-size:.69rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
-.chip:hover{border-color:var(--accent);color:var(--accent);background:#f0f5ff}
-.chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.chip-clear{padding:4px 11px;border-radius:20px;border:1.5px solid var(--red-border);background:var(--red-bg);color:var(--red);font-family:'Inter',sans-serif;font-size:.69rem;font-weight:500;cursor:pointer;display:none}
-.chip-clear.visible{display:inline-block}
 main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:13px}
 .card{background:var(--surface);border:1px solid var(--border-light);border-radius:var(--r);padding:15px;box-shadow:var(--sh);transition:all .15s;display:flex;flex-direction:column;gap:9px}
@@ -120,25 +114,6 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
   <button class="tab" data-source="products">📦 Products</button>
   <button class="tab" data-source="recipes">📋 Recipes</button>
 </div>
-<div class="filter-row">
-  <button class="chip-clear" id="clear-filter">✕ Clear</button>
-  <button class="chip active" data-filter="all">🍽️ All</button>
-  <button class="chip" data-filter="Gluten">🌾 Gluten</button>
-  <button class="chip" data-filter="Milk">🥛 Milk</button>
-  <button class="chip" data-filter="Eggs">🥚 Eggs</button>
-  <button class="chip" data-filter="Fish">🐟 Fish</button>
-  <button class="chip" data-filter="Crustaceans">🦐 Crustaceans</button>
-  <button class="chip" data-filter="Molluscs">🦑 Molluscs</button>
-  <button class="chip" data-filter="Peanuts">🥜 Peanuts</button>
-  <button class="chip" data-filter="Tree nuts">🌰 Tree Nuts</button>
-  <button class="chip" data-filter="Sesame">🫘 Sesame</button>
-  <button class="chip" data-filter="Soya">🫛 Soya</button>
-  <button class="chip" data-filter="Mustard">🌼 Mustard</button>
-  <button class="chip" data-filter="Celery">🥬 Celery</button>
-  <button class="chip" data-filter="Sulphites">⚗️ Sulphites</button>
-  <button class="chip" data-filter="Lupin">🌿 Lupin</button>
-  <button class="chip" data-filter="none">✅ Allergen Free</button>
-</div>
 <main>
   <div class="grid" id="grid"></div>
   <div class="show-more-wrap"><button id="show-more" style="display:none">Show more</button></div>
@@ -186,7 +161,7 @@ async function loadData(){
 }
 
 const PAGE=30;
-let filtered=[],shown=0,curFilter='all',curSource='all',curQuery='';
+let filtered=[],shown=0,curSource='all',curQuery='';
 
 function norm(s){return s.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim()}
 function scoreM(name,q){
@@ -200,8 +175,6 @@ function getFiltered(){
   if(curSource!=='all') r=r.filter(x=>x.source===curSource);
   const q=curQuery.trim();
   if(q) r=r.map(x=>[x,scoreM(x.name,q)]).filter(([,s])=>s>0).sort(([,a],[,b])=>b-a).map(([x])=>x);
-  if(curFilter==='none') r=r.filter(x=>!(x.contains?.length)&&!(x.may_contain?.length));
-  else if(curFilter!=='all') r=r.filter(x=>(x.contains||[]).includes(curFilter)||(x.may_contain||[]).includes(curFilter));
   return r;
 }
 function pills(list,cls){return(list||[]).map(a=>`<div class="ap ${cls}"><span class="pi">${AI[a]||'⚠️'}</span>${a}</div>`).join('')}
@@ -278,19 +251,6 @@ document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));});
 let deb;
 document.getElementById('search').addEventListener('input',e=>{clearTimeout(deb);deb=setTimeout(()=>{curQuery=e.target.value;render(true);},200);});
-document.querySelectorAll('.chip[data-filter]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.chip[data-filter]').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');curFilter=b.dataset.filter;
-  document.getElementById('clear-filter').classList.toggle('visible',curFilter!=='all');
-  render(true);
-}));
-document.getElementById('clear-filter').addEventListener('click',()=>{
-  curFilter='all';
-  document.querySelectorAll('.chip[data-filter]').forEach(x=>x.classList.remove('active'));
-  document.querySelector('.chip[data-filter="all"]').classList.add('active');
-  document.getElementById('clear-filter').classList.remove('visible');
-  render(true);
-});
 document.querySelectorAll('.tab[data-source]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.tab[data-source]').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');curSource=b.dataset.source;render(true);
