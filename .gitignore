@@ -1,0 +1,4 @@
+node_modules/
+scripts/serviceAccountKey.json
+.firebase/
+firebase-debug.log

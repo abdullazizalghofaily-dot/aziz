@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEOM Allergen Database — Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f7;--surface:#fff;--surface2:#e8ebf4;
+  --border:#d0d6e8;--border-light:#e2e7f5;
+  --accent:#3a6fd8;--accent2:#6244b0;
+  --text:#1a1f36;--text2:#4a5175;--muted:#7a82a3;
+  --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
+  --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --r:14px;--sh:0 2px 12px rgba(30,40,100,.08);--sh-lg:0 8px 40px rgba(30,40,100,.15)
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,40,100,.07)}
+h1{font-size:1.1rem;font-weight:700}
+h1 span{color:var(--accent)}
+button{font-family:'Inter',sans-serif;cursor:pointer}
+.btn{padding:8px 16px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:.82rem;font-weight:600}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.btn-danger{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff}
+main{max-width:1100px;margin:0 auto;padding:20px 16px}
+#login-screen{max-width:360px;margin:80px auto;background:var(--surface);border-radius:var(--r);padding:28px;box-shadow:var(--sh)}
+#login-screen h2{font-size:1.05rem;margin-bottom:16px;text-align:center}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.85rem;background:var(--surface2);color:var(--text)}
+.field textarea{min-height:70px;resize:vertical}
+#login-error{color:var(--red);font-size:.78rem;margin-top:8px;text-align:center;display:none}
+.toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+#admin-search{flex:1;min-width:200px;padding:9px 14px;border:1.5px solid var(--border);border-radius:20px;background:var(--surface);font-family:'Inter',sans-serif;font-size:.85rem}
+table{width:100%;border-collapse:collapse;background:var(--surface);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+th,td{text-align:left;padding:10px 12px;font-size:.8rem;border-bottom:1px solid var(--border-light)}
+th{background:var(--surface2);color:var(--text2);font-weight:700;text-transform:uppercase;font-size:.65rem;letter-spacing:.05em}
+tr:last-child td{border-bottom:none}
+td.actions{display:flex;gap:6px;justify-content:flex-end}
+.row-actions-cell{white-space:nowrap;text-align:right}
+.tag{display:inline-block;font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:8px;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);margin:1px}
+.show-more-wrap{text-align:center;padding:20px 0}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,60,.45);z-index:1000;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:640px;max-height:88vh;overflow-y:auto;box-shadow:var(--sh-lg)}
+.modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface)}
+.modal-title{font-size:.98rem;font-weight:700}
+.modal-body{padding:18px 20px 22px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.checkbox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin-top:4px}
+.checkbox-grid label{display:flex;align-items:center;gap:5px;font-size:.78rem;font-weight:500;color:var(--text2)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;padding-top:16px}
+#status-msg{position:fixed;bottom:20px;right:20px;padding:10px 18px;border-radius:9px;font-size:.82rem;font-weight:600;box-shadow:var(--sh-lg);display:none;z-index:2000}
+#status-msg.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+#status-msg.err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h2>🔐 Admin Login</h2>
+  <div class="field"><label>Email</label><input type="email" id="login-email" autocomplete="username"></div>
+  <div class="field"><label>Password</label><input type="password" id="login-password" autocomplete="current-password"></div>
+  <button class="btn btn-primary" id="login-btn" style="width:100%">Sign In</button>
+  <div id="login-error"></div>
+</div>
+
+<div id="app-screen" style="display:none">
+  <header>
+    <h1>NEOM <span>Allergen DB</span> · Admin</h1>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span id="user-email" style="font-size:.78rem;color:var(--muted)"></span>
+      <a class="btn" href="./index.html">View Site</a>
+      <button class="btn" id="logout-btn">Sign Out</button>
+    </div>
+  </header>
+  <main>
+    <div class="toolbar">
+      <input type="text" id="admin-search" placeholder="Search products…">
+      <button class="btn btn-primary" id="add-btn">+ Add Product</button>
+    </div>
+    <table>
+      <thead><tr><th>Name</th><th>Source</th><th>Kcal</th><th>Contains</th><th></th></tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="show-more-wrap"><button class="btn" id="show-more-btn" style="display:none">Show more</button></div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add Product</div>
+      <button class="btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid2">
+        <div class="field"><label>Name *</label><input type="text" id="f-name"></div>
+        <div class="field"><label>Source</label><select id="f-source"><option value="products">Product</option><option value="recipes">Recipe</option></select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Kcal / 100g</label><input type="number" step="0.01" id="f-kcal"></div>
+        <div class="field"><label>Brand</label><input type="text" id="f-brand"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Fat (g)</label><input type="number" step="0.01" id="f-fat"></div>
+        <div class="field"><label>Protein (g)</label><input type="number" step="0.01" id="f-protein"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Carbs (g)</label><input type="number" step="0.01" id="f-carbs"></div>
+        <div class="field"><label>Country</label><input type="text" id="f-country"></div>
+      </div>
+      <div class="field"><label>Ingredients</label><textarea id="f-ingredients"></textarea></div>
+      <div class="field"><label>Method (for recipes)</label><textarea id="f-method"></textarea></div>
+      <div class="field"><label>Description</label><textarea id="f-description"></textarea></div>
+      <div class="field"><label>Notes</label><textarea id="f-notes"></textarea></div>
+      <div class="field"><label>Diet tags (comma separated, e.g. Vegan, Halal)</label><input type="text" id="f-diet"></div>
+      <div class="field">
+        <label>Contains (allergens)</label>
+        <div class="checkbox-grid" id="contains-grid"></div>
+      </div>
+      <div class="field">
+        <label>May Contain (allergens)</label>
+        <div class="checkbox-grid" id="may-grid"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="status-msg"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const ALLERGENS = ['Gluten','Tree nuts','Peanuts','Eggs','Milk','Fish','Crustaceans','Molluscs','Celery','Mustard','Sesame','Soya','Sulphites','Lupin'];
+const PAGE = 30;
+
+let DATA = [];
+let filtered = [];
+let shown = 0;
+let editingId = null;
+
+function buildCheckboxGrid(container, prefix){
+  container.innerHTML = ALLERGENS.map(a=>`<label><input type="checkbox" value="${a}" data-group="${prefix}">${a}</label>`).join('');
+}
+buildCheckboxGrid(document.getElementById('contains-grid'),'contains');
+buildCheckboxGrid(document.getElementById('may-grid'),'may');
+
+function showStatus(msg, ok=true){
+  const el = document.getElementById('status-msg');
+  el.textContent = msg;
+  el.className = ok ? 'ok' : 'err';
+  el.style.display = 'block';
+  setTimeout(()=>{el.style.display='none';}, 2500);
+}
+
+async function loadData(){
+  document.getElementById('table-body').innerHTML = '<tr><td colspan="5">Loading…</td></tr>';
+  const snap = await getDocs(collection(db,'products'));
+  DATA = snap.docs.map(d=>({id:d.id, ...d.data()}));
+  applyFilter();
+}
+
+function applyFilter(){
+  const q = document.getElementById('admin-search').value.trim().toLowerCase();
+  filtered = q ? DATA.filter(x=>x.name && x.name.toLowerCase().includes(q)) : DATA;
+  shown = 0;
+  renderTable(true);
+}
+
+function renderTable(reset){
+  const tbody = document.getElementById('table-body');
+  if(reset){ tbody.innerHTML=''; }
+  const chunk = filtered.slice(shown, shown+PAGE);
+  shown += chunk.length;
+  if(filtered.length===0){
+    tbody.innerHTML = '<tr><td colspan="5">No products found</td></tr>';
+  } else {
+    tbody.insertAdjacentHTML('beforeend', chunk.map(r=>`
+      <tr data-id="${r.id}">
+        <td>${r.name||''}</td>
+        <td>${r.source||''}</td>
+        <td>${r.kcal!=null?r.kcal:'—'}</td>
+        <td>${(r.contains||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</td>
+        <td class="row-actions-cell">
+          <button class="btn" data-action="edit" data-id="${r.id}">Edit</button>
+          <button class="btn btn-danger" data-action="delete" data-id="${r.id}">Delete</button>
+        </td>
+      </tr>`).join(''));
+  }
+  const rem = filtered.length - shown;
+  const moreBtn = document.getElementById('show-more-btn');
+  moreBtn.style.display = rem>0 ? 'inline-block' : 'none';
+  if(rem>0) moreBtn.textContent = `Show more (${rem} remaining)`;
+}
+
+function openModal(item){
+  editingId = item ? item.id : null;
+  document.getElementById('modal-title').textContent = item ? 'Edit Product' : 'Add Product';
+  const d = (item && item.details) || {};
+  document.getElementById('f-name').value = item?.name || '';
+  document.getElementById('f-source').value = item?.source || 'products';
+  document.getElementById('f-kcal').value = item?.kcal ?? '';
+  document.getElementById('f-brand').value = d.brand || '';
+  document.getElementById('f-fat').value = d.fat ?? '';
+  document.getElementById('f-protein').value = d.protein ?? '';
+  document.getElementById('f-carbs').value = d.carbs ?? '';
+  document.getElementById('f-country').value = d.country || '';
+  document.getElementById('f-ingredients').value = d.ingredients || '';
+  document.getElementById('f-method').value = d.method || '';
+  document.getElementById('f-description').value = d.description || '';
+  document.getElementById('f-notes').value = d.notes || '';
+  document.getElementById('f-diet').value = (item?.diet||[]).join(', ');
+  const contains = new Set(item?.contains||[]);
+  const may = new Set(item?.may_contain||[]);
+  document.querySelectorAll('#contains-grid input').forEach(cb=>cb.checked = contains.has(cb.value));
+  document.querySelectorAll('#may-grid input').forEach(cb=>cb.checked = may.has(cb.value));
+  document.getElementById('edit-modal').classList.add('open');
+}
+window.closeModal = function(){
+  document.getElementById('edit-modal').classList.remove('open');
+};
+
+function numOrUndefined(v){
+  if(v === '' || v === null || v === undefined) return undefined;
+  const n = parseFloat(v);
+  return isNaN(n) ? undefined : n;
+}
+
+async function saveProduct(){
+  const name = document.getElementById('f-name').value.trim();
+  if(!name){ showStatus('Name is required', false); return; }
+  const details = {};
+  const brand = document.getElementById('f-brand').value.trim(); if(brand) details.brand = brand;
+  const country = document.getElementById('f-country').value.trim(); if(country) details.country = country;
+  const ingredients = document.getElementById('f-ingredients').value.trim(); if(ingredients) details.ingredients = ingredients;
+  const method = document.getElementById('f-method').value.trim(); if(method) details.method = method;
+  const description = document.getElementById('f-description').value.trim(); if(description) details.description = description;
+  const notes = document.getElementById('f-notes').value.trim(); if(notes) details.notes = notes;
+  const fat = numOrUndefined(document.getElementById('f-fat').value); if(fat!==undefined) details.fat = fat;
+  const protein = numOrUndefined(document.getElementById('f-protein').value); if(protein!==undefined) details.protein = protein;
+  const carbs = numOrUndefined(document.getElementById('f-carbs').value); if(carbs!==undefined) details.carbs = carbs;
+
+  const diet = document.getElementById('f-diet').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const contains = Array.from(document.querySelectorAll('#contains-grid input:checked')).map(cb=>cb.value);
+  const may_contain = Array.from(document.querySelectorAll('#may-grid input:checked')).map(cb=>cb.value);
+
+  const payload = {
+    name,
+    source: document.getElementById('f-source').value,
+    kcal: numOrUndefined(document.getElementById('f-kcal').value) ?? null,
+    contains, may_contain, details, diet
+  };
+
+  try{
+    if(editingId){
+      await setDoc(doc(db,'products',editingId), payload, {merge:false});
+    } else {
+      await addDoc(collection(db,'products'), payload);
+    }
+    showStatus('Saved successfully');
+    closeModal();
+    await loadData();
+  }catch(e){
+    console.error(e);
+    showStatus('Save failed: '+e.message, false);
+  }
+}
+
+document.getElementById('save-btn').addEventListener('click', saveProduct);
+document.getElementById('add-btn').addEventListener('click', ()=>openModal(null));
+document.getElementById('admin-search').addEventListener('input', applyFilter);
+document.getElementById('show-more-btn').addEventListener('click', ()=>renderTable(false));
+
+document.getElementById('table-body').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const id = btn.dataset.id;
+  const item = DATA.find(x=>x.id===id);
+  if(btn.dataset.action==='edit'){
+    openModal(item);
+  } else if(btn.dataset.action==='delete'){
+    if(!confirm(`Delete "${item?.name}"? This cannot be undone.`)) return;
+    try{
+      await deleteDoc(doc(db,'products',id));
+      showStatus('Deleted');
+      await loadData();
+    }catch(err){
+      showStatus('Delete failed: '+err.message, false);
+    }
+  }
+});
+
+document.getElementById('login-btn').addEventListener('click', async ()=>{
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+  try{
+    await signInWithEmailAndPassword(auth, email, password);
+  }catch(e){
+    errEl.textContent = 'Login failed: ' + e.message;
+    errEl.style.display = 'block';
+  }
+});
+document.getElementById('logout-btn').addEventListener('click', ()=>signOut(auth));
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('user-email').textContent = user.email;
+    loadData();
+  } else {
+    document.getElementById('login-screen').style.display = 'block';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>

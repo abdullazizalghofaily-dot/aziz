@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEOM Allergen Database</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f2f7;--surface:#fff;--surface2:#e8ebf4;
+  --border:#d0d6e8;--border-light:#e2e7f5;
+  --accent:#3a6fd8;--accent2:#6244b0;
+  --text:#1a1f36;--text2:#4a5175;--muted:#7a82a3;
+  --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
+  --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
+  --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --r:14px;--sh:0 2px 12px rgba(30,40,100,.08);--sh-lg:0 8px 40px rgba(30,40,100,.15)
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 28px 16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,40,100,.07)}
+.header-top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px}
+.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+h1{font-size:1.35rem;font-weight:700;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+.search-wrap{position:relative;max-width:600px;margin:0 auto}
+.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+#search{width:100%;padding:12px 18px 12px 42px;background:var(--surface2);border:1.5px solid var(--border);border-radius:50px;color:var(--text);font-family:'Inter',sans-serif;font-size:.9rem;outline:none;transition:all .2s}
+#search:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(58,111,216,.12)}
+#search::placeholder{color:var(--muted)}
+.stats-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 0 0;font-size:.74rem;color:var(--muted)}
+.stats-bar b{color:var(--text2);font-weight:600}
+.credit{font-size:.7rem;color:var(--muted);margin-top:6px}
+.credit b{color:var(--text2)}
+.source-tabs{display:flex;gap:6px;justify-content:center;padding:11px 20px 0;flex-wrap:wrap}
+.tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Inter',sans-serif;font-size:.71rem;font-weight:600;cursor:pointer;transition:all .15s}
+.tab:hover{border-color:var(--accent2);color:var(--accent2)}
+.tab.active{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.filter-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:9px 20px 4px}
+.chip{display:flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Inter',sans-serif;font-size:.69rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.chip:hover{border-color:var(--accent);color:var(--accent);background:#f0f5ff}
+.chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip-clear{padding:4px 11px;border-radius:20px;border:1.5px solid var(--red-border);background:var(--red-bg);color:var(--red);font-family:'Inter',sans-serif;font-size:.69rem;font-weight:500;cursor:pointer;display:none}
+.chip-clear.visible{display:inline-block}
+main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:13px}
+.card{background:var(--surface);border:1px solid var(--border-light);border-radius:var(--r);padding:15px;box-shadow:var(--sh);transition:all .15s;display:flex;flex-direction:column;gap:9px}
+.card:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(58,111,216,.12);transform:translateY(-2px)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:9px}
+.card-title-area{flex:1}
+.recipe-name{font-size:.87rem;font-weight:600;line-height:1.35;color:var(--text)}
+.recipe-meta{font-size:.67rem;color:var(--muted);margin-top:3px}
+.source-tag{font-size:.59rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:5px;margin-top:4px;display:inline-block}
+.source-tag.products{background:#eef3ff;color:var(--accent)}
+.source-tag.recipes{background:#f2eeff;color:var(--accent2)}
+.kcal-badge{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border-radius:8px;padding:5px 9px;font-size:.79rem;font-weight:700;white-space:nowrap;flex-shrink:0;text-align:center;line-height:1.2}
+.kcal-badge small{font-size:.57rem;opacity:.85;display:block;font-weight:400}
+.sec-label{font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.sec-label.contains{color:var(--red)}
+.sec-label.may{color:var(--amber)}
+.allergen-icons{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.ap{display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:.66rem;font-weight:600}
+.ap.contains{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+.ap.may{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber)}
+.ap .pi{font-size:12px}
+.safe-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;color:var(--green);font-size:.67rem;font-weight:600}
+.diet-row{display:flex;flex-wrap:wrap;gap:4px}
+.diet-tag{font-size:.61rem;font-weight:600;padding:2px 7px;border-radius:9px;background:#eefaf4;border:1px solid #b8eacf;color:#1a7a4a}
+.btn-details{display:flex;align-items:center;gap:4px;padding:5px 10px;background:#f0f5ff;border:1.5px solid var(--border);border-radius:7px;color:var(--accent);font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;width:fit-content}
+.btn-details:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,60,.45);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:600px;max-height:88vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:mIn .2s ease}
+@keyframes mIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:none}}
+.modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border-light);position:sticky;top:0;background:var(--surface);border-radius:18px 18px 0 0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.modal-title{font-size:.98rem;font-weight:700;line-height:1.3}
+.modal-sub{font-size:.73rem;color:var(--muted);margin-top:3px}
+.btn-close{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.btn-close:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.modal-body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:18px}
+.detail-section{}
+.detail-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+.detail-value{font-size:.82rem;color:var(--text2);line-height:1.7}
+.nut-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.nut-cell{background:var(--surface2);border-radius:9px;padding:9px 6px;text-align:center}
+.nut-val{font-size:.98rem;font-weight:700}
+.nut-unit{font-size:.58rem;color:var(--muted)}
+.nut-lbl{font-size:.61rem;color:var(--text2);margin-top:2px;font-weight:500}
+.method-box{background:var(--surface2);border-radius:10px;padding:13px 15px;font-size:.81rem;color:var(--text2);line-height:1.75;white-space:pre-wrap;border-left:3px solid var(--accent)}
+.ing-box{background:#fafbff;border:1px solid var(--border-light);border-radius:10px;padding:13px 15px;font-size:.79rem;color:var(--text2);line-height:1.75;white-space:pre-wrap}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1/-1}
+.empty-icon{font-size:42px;margin-bottom:12px}
+.empty h3{font-size:.98rem;color:var(--text2);margin-bottom:5px}
+.show-more-wrap{text-align:center;padding:22px 0 0}
+#show-more{padding:10px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:50px;color:var(--text2);font-family:'Inter',sans-serif;font-size:.83rem;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:var(--sh)}
+#show-more:hover{border-color:var(--accent);color:var(--accent);background:#f0f5ff}
+@media(max-width:600px){
+  header{padding:13px 12px 11px}h1{font-size:1.1rem}
+  .grid{grid-template-columns:1fr}.nut-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <div class="logo-icon">🍽️</div>
+    <h1>Recipe &amp; Product <span>Allergen</span> Database</h1>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search" placeholder="Search... e.g. chicken, hummus, cheddar" autocomplete="off" autofocus>
+  </div>
+  <div class="stats-bar">
+    <span>Total: <b id="total-count">0</b></span><span>·</span><span>Results: <b id="result-count">0</b></span>
+  </div>
+  <div class="credit">Made by <b>Abdullaziz Alghofaily</b> · AL TAMIMI · Nutritionist</div>
+</header>
+<div class="source-tabs">
+  <button class="tab active" data-source="all">All</button>
+  <button class="tab" data-source="products">📦 Products</button>
+  <button class="tab" data-source="recipes">📋 Recipes</button>
+</div>
+<div class="filter-row">
+  <button class="chip-clear" id="clear-filter">✕ Clear</button>
+  <button class="chip active" data-filter="all">🍽️ All</button>
+  <button class="chip" data-filter="Gluten">🌾 Gluten</button>
+  <button class="chip" data-filter="Milk">🥛 Milk</button>
+  <button class="chip" data-filter="Eggs">🥚 Eggs</button>
+  <button class="chip" data-filter="Fish">🐟 Fish</button>
+  <button class="chip" data-filter="Crustaceans">🦐 Crustaceans</button>
+  <button class="chip" data-filter="Molluscs">🦑 Molluscs</button>
+  <button class="chip" data-filter="Peanuts">🥜 Peanuts</button>
+  <button class="chip" data-filter="Tree nuts">🌰 Tree Nuts</button>
+  <button class="chip" data-filter="Sesame">🫘 Sesame</button>
+  <button class="chip" data-filter="Soya">🫛 Soya</button>
+  <button class="chip" data-filter="Mustard">🌼 Mustard</button>
+  <button class="chip" data-filter="Celery">🥬 Celery</button>
+  <button class="chip" data-filter="Sulphites">⚗️ Sulphites</button>
+  <button class="chip" data-filter="Lupin">🌿 Lupin</button>
+  <button class="chip" data-filter="none">✅ Allergen Free</button>
+</div>
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="show-more-wrap"><button id="show-more" style="display:none">Show more</button></div>
+</main>
+<div class="modal-overlay" id="view-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title" id="view-title"></div><div class="modal-sub" id="view-sub"></div></div>
+      <button class="btn-close" onclick="closeModal('view-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="view-body"></div>
+  </div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const CACHE_KEY = 'neom_products_cache_v1';
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+const AI={'Gluten':'🌾','Tree nuts':'🌰','Peanuts':'🥜','Eggs':'🥚','Milk':'🥛','Fish':'🐟','Crustaceans':'🦐','Molluscs':'🦑','Celery':'🥬','Mustard':'🌼','Sesame':'🫘','Soya':'🫛','Sulphites':'⚗️','Lupin':'🌿'};
+let DATA=[];
+async function loadData(){
+  const grid=document.getElementById('grid');
+  const cached=localStorage.getItem(CACHE_KEY);
+  if(cached){
+    try{
+      const {ts,items}=JSON.parse(cached);
+      if(Date.now()-ts<CACHE_TTL_MS){DATA=items;render(true);return;}
+    }catch(e){}
+  }
+  grid.innerHTML='<div class="empty"><div class="empty-icon">⏳</div><h3>Loading database…</h3></div>';
+  try{
+    const snap=await getDocs(collection(db,'products'));
+    DATA=snap.docs.map(d=>({id:d.id,...d.data()}));
+    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),items:DATA}));
+  }catch(e){
+    console.error('Failed to load products from Firestore',e);
+    grid.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load database</h3><p>Check your Firebase configuration and connection</p></div>';
+    return;
+  }
+  render(true);
+}
+
+const PAGE=30;
+let filtered=[],shown=0,curFilter='all',curSource='all',curQuery='';
+
+function norm(s){return s.toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim()}
+function scoreM(name,q){
+  const n=norm(name),qn=norm(q);
+  if(n.startsWith(qn))return 3;if(n.includes(qn))return 2;
+  const w=qn.split(' ').filter(Boolean),h=w.filter(x=>n.includes(x));
+  return h.length===w.length?1:h.length>0?.5:0;
+}
+function getFiltered(){
+  let r=DATA;
+  if(curSource!=='all') r=r.filter(x=>x.source===curSource);
+  const q=curQuery.trim();
+  if(q) r=r.map(x=>[x,scoreM(x.name,q)]).filter(([,s])=>s>0).sort(([,a],[,b])=>b-a).map(([x])=>x);
+  if(curFilter==='none') r=r.filter(x=>!(x.contains?.length)&&!(x.may_contain?.length));
+  else if(curFilter!=='all') r=r.filter(x=>(x.contains||[]).includes(curFilter)||(x.may_contain||[]).includes(curFilter));
+  return r;
+}
+function pills(list,cls){return(list||[]).map(a=>`<div class="ap ${cls}"><span class="pi">${AI[a]||'⚠️'}</span>${a}</div>`).join('')}
+function buildCard(r,idx){
+  const kcal=r.kcal!=null?parseFloat(r.kcal).toFixed(0):'—';
+  const d=r.details||{};
+  const meta=[d.brand&&'🏷️ '+d.brand,d.category].filter(Boolean).join(' · ');
+  const c=r.contains||[],m=r.may_contain||[];
+  let alHTML=c.length===0&&m.length===0?'<div class="safe-badge">✅ No allergens</div>':'';
+  if(c.length) alHTML+=`<div class="sec-label contains">⚠️ Contains</div><div class="allergen-icons">${pills(c,'contains')}</div>`;
+  if(m.length) alHTML+=`<div class="sec-label may">〰️ May Contain</div><div class="allergen-icons">${pills(m,'may')}</div>`;
+  const diet=(r.diet||[]).map(dt=>`<span class="diet-tag">${dt}</span>`).join('');
+  const hasD=d.ingredients||d.country||d.brand||d.description||d.notes||d.fat!=null||d.protein!=null||d.carbs!=null||d.method;
+  return `<div class="card">
+    <div class="card-top">
+      <div class="card-title-area">
+        <div class="recipe-name">${r.name}</div>
+        ${meta?`<div class="recipe-meta">${meta}</div>`:''}
+        <span class="source-tag ${r.source}">${r.source==='products'?'📦 Product':'📋 Recipe'}</span>
+      </div>
+      <div class="kcal-badge">${kcal}<small>kcal/100g</small></div>
+    </div>
+    <div>${alHTML}</div>
+    ${diet?`<div class="diet-row">${diet}</div>`:''}
+    ${hasD?`<button class="btn-details" onclick="openView(${idx})">📋 View Details</button>`:''}
+  </div>`;
+}
+function render(reset=true){
+  if(reset){filtered=getFiltered();shown=0;}
+  const grid=document.getElementById('grid');
+  const si=shown,chunk=filtered.slice(shown,shown+PAGE);
+  shown+=chunk.length;
+  if(reset) grid.innerHTML='';
+  grid.insertAdjacentHTML('beforeend',filtered.length===0
+    ?'<div class="empty"><div class="empty-icon">🔍</div><h3>No results found</h3><p>Try a different search or filter</p></div>'
+    :chunk.map((r,i)=>buildCard(r,si+i)).join(''));
+  document.getElementById('result-count').textContent=filtered.length.toLocaleString();
+  document.getElementById('total-count').textContent=DATA.length.toLocaleString();
+  const btn=document.getElementById('show-more'),rem=filtered.length-shown;
+  btn.style.display=rem>0?'inline-block':'none';
+  if(rem>0) btn.textContent=`Show more (${rem.toLocaleString()} remaining)`;
+}
+function esc(t){return t?String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+function openView(idx){
+  const r=filtered[idx];
+  const d=r.details||{};
+  document.getElementById('view-title').textContent=r.name;
+  document.getElementById('view-sub').textContent=[d.brand,d.category].filter(Boolean).join(' · ');
+  const kc=r.kcal!=null?parseFloat(r.kcal).toFixed(0):'—';
+  const fat=d.fat!=null?d.fat+'g':'—',prot=d.protein!=null?d.protein+'g':'—',carb=d.carbs!=null?d.carbs+'g':'—';
+  const c=r.contains||[],m=r.may_contain||[];
+  const ap=[...c.map(a=>`<span class="ap contains" style="display:inline-flex;margin:2px">${AI[a]||'⚠️'} ${a}</span>`),
+            ...m.map(a=>`<span class="ap may" style="display:inline-flex;margin:2px">${AI[a]||'⚠️'} ${a}</span>`)];
+  let b='';
+  b+=`<div class="detail-section"><div class="detail-label">Nutrition per 100g</div><div class="nut-grid">
+    <div class="nut-cell"><div class="nut-val">${kc}</div><div class="nut-unit">kcal</div><div class="nut-lbl">Energy</div></div>
+    <div class="nut-cell"><div class="nut-val">${fat}</div><div class="nut-unit">per 100g</div><div class="nut-lbl">Fat</div></div>
+    <div class="nut-cell"><div class="nut-val">${prot}</div><div class="nut-unit">per 100g</div><div class="nut-lbl">Protein</div></div>
+    <div class="nut-cell"><div class="nut-val">${carb}</div><div class="nut-unit">per 100g</div><div class="nut-lbl">Carbs</div></div>
+  </div></div>`;
+  b+=`<div class="detail-section"><div class="detail-label">Allergens</div>${ap.length?`<div style="display:flex;flex-wrap:wrap;gap:3px">${ap.join('')}</div>`:'<div class="safe-badge">✅ No allergens</div>'}</div>`;
+  if(d.brand||d.country) b+=`<div class="detail-section"><div class="detail-label">Product Info</div><div class="detail-value">${[d.brand&&`<b>Brand:</b> ${esc(d.brand)}`,d.country&&`<b>Country:</b> ${esc(d.country)}`].filter(Boolean).join('<br>')}</div></div>`;
+  if(r.diet?.length) b+=`<div class="detail-section"><div class="detail-label">Dietary</div><div style="display:flex;gap:4px;flex-wrap:wrap">${r.diet.map(dt=>`<span class="diet-tag">${dt}</span>`).join('')}</div></div>`;
+  if(d.ingredients) b+=`<div class="detail-section"><div class="detail-label">🥕 Food Ingredients</div><div class="ing-box">${esc(d.ingredients)}</div></div>`;
+  if(d.method) b+=`<div class="detail-section"><div class="detail-label">👨‍🍳 Recipe Method</div><div class="method-box">${esc(d.method)}</div></div>`;
+  if(d.description) b+=`<div class="detail-section"><div class="detail-label">Description</div><div class="detail-value">${esc(d.description)}</div></div>`;
+  if(d.notes) b+=`<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-value">${esc(d.notes)}</div></div>`;
+  document.getElementById('view-body').innerHTML=b;
+  document.getElementById('view-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));});
+let deb;
+document.getElementById('search').addEventListener('input',e=>{clearTimeout(deb);deb=setTimeout(()=>{curQuery=e.target.value;render(true);},200);});
+document.querySelectorAll('.chip[data-filter]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.chip[data-filter]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');curFilter=b.dataset.filter;
+  document.getElementById('clear-filter').classList.toggle('visible',curFilter!=='all');
+  render(true);
+}));
+document.getElementById('clear-filter').addEventListener('click',()=>{
+  curFilter='all';
+  document.querySelectorAll('.chip[data-filter]').forEach(x=>x.classList.remove('active'));
+  document.querySelector('.chip[data-filter="all"]').classList.add('active');
+  document.getElementById('clear-filter').classList.remove('visible');
+  render(true);
+});
+document.querySelectorAll('.tab[data-source]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab[data-source]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');curSource=b.dataset.source;render(true);
+}));
+document.getElementById('show-more').addEventListener('click',()=>render(false));
+loadData();
+</script>
+</body>
+</html>

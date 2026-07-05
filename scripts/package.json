@@ -1,0 +1,9 @@
+{
+  "name": "neom-allergens-migration",
+  "private": true,
+  "version": "1.0.0",
+  "description": "One-time script to import data-export.json into Firestore",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
