@@ -63,9 +63,12 @@ tr:last-child td{border-bottom:none}
 .ing-result{padding:9px 12px;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--border-light)}
 .ing-result:last-child{border-bottom:none}
 .ing-result:hover{background:var(--surface2)}
-.ing-qty-row{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--surface2);border-top:1px solid var(--border)}
-.ing-qty-row input{width:90px;padding:7px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem}
-.ing-qty-row select{padding:7px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem}
+.ing-qty-row{padding:10px 12px;background:var(--surface2);border-top:1px solid var(--border)}
+.ing-qty-name{font-size:.8rem;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.35}
+.ing-qty-controls{display:flex;gap:8px;align-items:center}
+.ing-qty-row input{width:90px;padding:7px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;flex-shrink:0}
+.ing-qty-row select{padding:7px 9px;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.82rem;flex-shrink:0}
+.ing-qty-row button{flex-shrink:0}
 .ing-picker-list{margin-top:8px;display:flex;flex-direction:column;gap:6px}
 .ing-picker-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:.8rem}
 .ing-picker-row button{background:none;border:none;color:var(--red);font-size:.9rem;cursor:pointer;padding:0 4px}
@@ -177,13 +180,20 @@ tr:last-child td{border-bottom:none}
       <div class="field"><label>Description</label><textarea id="f-description"></textarea></div>
       <div class="field"><label>Notes</label><textarea id="f-notes"></textarea></div>
       <div class="field"><label>Diet tags (comma separated, e.g. Vegan, Halal)</label><input type="text" id="f-diet"></div>
-      <div class="field">
-        <label>Contains (allergens)</label>
-        <div class="checkbox-grid" id="contains-grid"></div>
+      <div id="allergen-checkboxes-fields">
+        <div class="field">
+          <label>Contains (allergens)</label>
+          <div class="checkbox-grid" id="contains-grid"></div>
+        </div>
+        <div class="field">
+          <label>May Contain (allergens)</label>
+          <div class="checkbox-grid" id="may-grid"></div>
+        </div>
       </div>
-      <div class="field">
-        <label>May Contain (allergens)</label>
-        <div class="checkbox-grid" id="may-grid"></div>
+      <div class="field" id="allergen-auto-note" style="display:none">
+        <label>Allergens</label>
+        <div style="font-size:.78rem;color:var(--muted)">Calculated automatically from the ingredients you add above.</div>
+        <div id="allergen-preview" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px"></div>
       </div>
       <div class="modal-footer">
         <button class="btn" onclick="closeModal()">Cancel</button>
@@ -224,10 +234,23 @@ function scoreM(name,q){
   const w=qn.split(' ').filter(Boolean),h=w.filter(x=>n.includes(x));
   return h.length===w.length?1:h.length>0?.5:0;
 }
+let NAME_INDEX=new Map();
 async function loadAllProductsForSearch(){
   if(ALL_PRODUCTS.length) return;
   const snap=await getDocs(collection(db,'products'));
   ALL_PRODUCTS=snap.docs.map(d=>({id:d.id,...d.data()}));
+  NAME_INDEX=new Map();
+  ALL_PRODUCTS.forEach(rec=>{
+    const k=norm(rec.name||'');
+    if(!NAME_INDEX.has(k)) NAME_INDEX.set(k, rec);
+  });
+}
+const QTY_RE=/^(.*?)\s*-\s*[\d.,\/]+\s*(?:g|kg|ml|l)\s*$/i;
+function resolveIngredientLine(line){
+  const m=line.match(QTY_RE);
+  const base=(m?m[1]:line).trim();
+  const rec=NAME_INDEX.get(norm(base));
+  return {text:line, contains:rec?.contains||[], may_contain:rec?.may_contain||[]};
 }
 
 function buildCheckboxGrid(container, prefix){
@@ -323,20 +346,47 @@ function updateSourceFieldsVisibility(){
   document.getElementById('product-fields').style.display = isProduct ? 'block' : 'none';
   document.getElementById('ingredients-product-field').style.display = isProduct ? 'block' : 'none';
   document.getElementById('ingredients-recipe-field').style.display = isProduct ? 'none' : 'block';
+  document.getElementById('allergen-checkboxes-fields').style.display = isProduct ? 'block' : 'none';
+  document.getElementById('allergen-auto-note').style.display = isProduct ? 'none' : 'block';
+  if(!isProduct) renderAllergenPreview();
 }
 document.getElementById('f-source').addEventListener('change', updateSourceFieldsVisibility);
+
+function computeAllergensFromIngredients(){
+  const containsSet=new Set(), maySet=new Set();
+  currentIngredients.forEach(ing=>{
+    (ing.contains||[]).forEach(a=>containsSet.add(a));
+    (ing.may_contain||[]).forEach(a=>maySet.add(a));
+  });
+  const contains=[...containsSet];
+  const may_contain=[...maySet].filter(a=>!containsSet.has(a));
+  return {contains, may_contain};
+}
+function renderAllergenPreview(){
+  const {contains, may_contain}=computeAllergensFromIngredients();
+  const preview=document.getElementById('allergen-preview');
+  if(contains.length===0 && may_contain.length===0){
+    preview.innerHTML='<span style="font-size:.76rem;color:var(--muted)">No allergens detected yet</span>';
+    return;
+  }
+  preview.innerHTML=[
+    ...contains.map(a=>`<span class="tag">${a}</span>`),
+    ...may_contain.map(a=>`<span class="tag" style="background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border)">${a} (may)</span>`)
+  ].join('');
+}
 
 function renderIngredientList(){
   const box=document.getElementById('ingredient-list');
   if(currentIngredients.length===0){
     box.innerHTML='<div class="ing-picker-empty">No ingredients added yet.</div>';
-    return;
+  } else {
+    box.innerHTML=currentIngredients.map((ing,i)=>`
+      <div class="ing-picker-row">
+        <span>${ing.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>
+        <button type="button" data-remove-idx="${i}">✕</button>
+      </div>`).join('');
   }
-  box.innerHTML=currentIngredients.map((line,i)=>`
-    <div class="ing-picker-row">
-      <span>${line.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>
-      <button type="button" data-remove-idx="${i}">✕</button>
-    </div>`).join('');
+  renderAllergenPreview();
 }
 document.getElementById('ingredient-list').addEventListener('click', e=>{
   const btn=e.target.closest('button[data-remove-idx]');
@@ -356,8 +406,8 @@ document.getElementById('ingredient-search').addEventListener('input', e=>{
     if(matches.length===0){
       results.innerHTML='<div class="ing-result" style="color:var(--muted)">No matches found</div>';
     } else {
-      results.innerHTML=matches.map((p,i)=>`<div class="ing-result" data-pick-idx="${i}">${p.name}${p.details?.brand?' · '+p.details.brand:''}</div>`).join('');
-      results.dataset.matches=JSON.stringify(matches.map(p=>({name:p.name})));
+      results.innerHTML=matches.map((p,i)=>`<div class="ing-result" data-pick-idx="${i}">${p.name}${p.details?.brand?' · '+p.details.brand:''} <span style="color:var(--muted);font-size:.7rem">(${p.source==='recipes'?'recipe':'product'})</span></div>`).join('');
+      results.dataset.matches=JSON.stringify(matches.map(p=>({name:p.name, contains:p.contains||[], may_contain:p.may_contain||[]})));
     }
     results.classList.add('open');
   }, 200);
@@ -370,16 +420,18 @@ document.getElementById('ingredient-search-results').addEventListener('click', e
   if(!picked) return;
   const results=e.currentTarget;
   results.innerHTML=`<div class="ing-qty-row">
-    <span style="flex:1;font-size:.8rem">${picked.name}</span>
-    <input type="number" step="0.01" id="qty-input" placeholder="Qty" autofocus>
-    <select id="qty-unit"><option>g</option><option>kg</option><option>ml</option><option>l</option></select>
-    <button type="button" class="btn btn-primary" id="qty-add-btn">Add</button>
+    <div class="ing-qty-name">${picked.name}</div>
+    <div class="ing-qty-controls">
+      <input type="number" step="0.01" id="qty-input" placeholder="Qty" autofocus>
+      <select id="qty-unit"><option>g</option><option>kg</option><option>ml</option><option>l</option></select>
+      <button type="button" class="btn btn-primary" id="qty-add-btn">Add</button>
+    </div>
   </div>`;
   document.getElementById('qty-add-btn').addEventListener('click', ()=>{
     const qty=document.getElementById('qty-input').value.trim();
     const unit=document.getElementById('qty-unit').value;
     if(!qty){ return; }
-    currentIngredients.push(`${picked.name} - ${qty}${unit}`);
+    currentIngredients.push({text:`${picked.name} - ${qty}${unit}`, contains:picked.contains, may_contain:picked.may_contain});
     renderIngredientList();
     results.classList.remove('open');
     results.innerHTML='';
@@ -394,6 +446,7 @@ document.addEventListener('click', e=>{
 });
 
 async function openModal(item){
+  await loadAllProductsForSearch();
   editingId = item ? item.id : null;
   document.getElementById('modal-title').textContent = item ? 'Edit Recipe' : 'Add Recipe';
   const d=(item && item.details) || {};
@@ -406,7 +459,9 @@ async function openModal(item){
   document.getElementById('f-carbs').value = d.carbs ?? '';
   document.getElementById('f-country').value = d.country || '';
   document.getElementById('f-ingredients').value = d.ingredients || '';
-  currentIngredients = (item?.source==='recipes' && d.ingredients) ? d.ingredients.split('\n').filter(Boolean) : [];
+  currentIngredients = (item?.source==='recipes' && d.ingredients)
+    ? d.ingredients.split('\n').filter(Boolean).map(resolveIngredientLine)
+    : [];
   renderIngredientList();
   document.getElementById('ingredient-search').value='';
   document.getElementById('ingredient-search-results').classList.remove('open');
@@ -420,7 +475,6 @@ async function openModal(item){
   document.querySelectorAll('#may-grid input').forEach(cb=>cb.checked=may.has(cb.value));
   updateSourceFieldsVisibility();
   document.getElementById('edit-modal').classList.add('open');
-  loadAllProductsForSearch();
 }
 window.closeModal=function(){ document.getElementById('edit-modal').classList.remove('open'); };
 
@@ -449,12 +503,17 @@ async function saveRecipe(){
     const protein=numOrUndefined(document.getElementById('f-protein').value); if(protein!==undefined) details.protein=protein;
     const carbs=numOrUndefined(document.getElementById('f-carbs').value); if(carbs!==undefined) details.carbs=carbs;
   } else if(currentIngredients.length){
-    details.ingredients=currentIngredients.join('\n');
+    details.ingredients=currentIngredients.map(i=>i.text).join('\n');
   }
 
   const diet=document.getElementById('f-diet').value.split(',').map(s=>s.trim()).filter(Boolean);
-  const contains=Array.from(document.querySelectorAll('#contains-grid input:checked')).map(cb=>cb.value);
-  const may_contain=Array.from(document.querySelectorAll('#may-grid input:checked')).map(cb=>cb.value);
+  let contains, may_contain;
+  if(isProduct){
+    contains=Array.from(document.querySelectorAll('#contains-grid input:checked')).map(cb=>cb.value);
+    may_contain=Array.from(document.querySelectorAll('#may-grid input:checked')).map(cb=>cb.value);
+  } else {
+    ({contains, may_contain}=computeAllergensFromIngredients());
+  }
 
   const payload={
     name,
