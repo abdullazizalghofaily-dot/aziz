@@ -6,46 +6,45 @@
 <title>Nutriziz — Allergen Database</title>
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f0f2f7;--surface:#fff;--surface2:#e8ebf4;
-  --border:#d0d6e8;--border-light:#e2e7f5;
-  --accent:#3a6fd8;--accent2:#6244b0;
-  --text:#1a1f36;--text2:#4a5175;--muted:#7a82a3;
+  --bg:#f6f7f2;--surface:#fff;--surface2:#e4ede6;
+  --border:#d7ddd2;--border-light:#e3e8de;
+  --accent:#2f6f4e;--accent2:#c8703a;
+  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;
   --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
   --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
   --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
-  --r:14px;--sh:0 2px 12px rgba(30,40,100,.08);--sh-lg:0 8px 40px rgba(30,40,100,.15)
+  --r:14px;--sh:0 2px 12px rgba(30,42,34,.08);--sh-lg:0 8px 40px rgba(30,42,34,.15)
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 28px 16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,40,100,.07)}
+body{font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 28px 16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,42,34,.07)}
 .chef-login-link{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:.75rem;font-weight:600;text-decoration:none;transition:all .15s}
-.chef-login-link:hover{border-color:var(--accent);color:var(--accent);background:#f0f5ff}
+.chef-login-link:hover{border-color:var(--accent);color:var(--accent);background:#eaf3ec}
 .admin-login-link{position:absolute;top:16px;right:16px;display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:.75rem;font-weight:600;text-decoration:none;transition:all .15s}
-.admin-login-link:hover{border-color:var(--accent);color:var(--accent);background:#f0f5ff}
+.admin-login-link:hover{border-color:var(--accent);color:var(--accent);background:#eaf3ec}
 .header-top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px}
-.logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-h1{font-size:1.35rem;font-weight:700;letter-spacing:-.02em}
-h1 span{color:var(--accent)}
+h1{font-size:1.6rem;font-weight:500;letter-spacing:-.01em}
+h1 .i-accent{color:var(--accent)}
+h1 .ziz{color:var(--accent2);font-weight:800}
 .tagline{font-size:.76rem;color:var(--muted);margin-top:2px}
 .search-wrap{position:relative;max-width:600px;margin:0 auto}
 .search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
-#search{width:100%;padding:12px 18px 12px 42px;background:var(--surface2);border:1.5px solid var(--border);border-radius:50px;color:var(--text);font-family:'Inter',sans-serif;font-size:.9rem;outline:none;transition:all .2s}
-#search:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(58,111,216,.12)}
+#search{width:100%;padding:12px 18px 12px 42px;background:var(--surface2);border:1.5px solid var(--border);border-radius:50px;color:var(--text);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.9rem;outline:none;transition:all .2s}
+#search:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(47,111,78,.12)}
 #search::placeholder{color:var(--muted)}
 .stats-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 0 0;font-size:.74rem;color:var(--muted)}
 .stats-bar b{color:var(--text2);font-weight:600}
 .credit{font-size:.7rem;color:var(--muted);margin-top:6px}
 .credit b{color:var(--text2)}
 .source-tabs{display:flex;gap:6px;justify-content:center;padding:11px 20px 0;flex-wrap:wrap}
-.tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Inter',sans-serif;font-size:.71rem;font-weight:600;cursor:pointer;transition:all .15s}
+.tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.71rem;font-weight:600;cursor:pointer;transition:all .15s}
 .tab:hover{border-color:var(--accent2);color:var(--accent2)}
 .tab.active{background:var(--accent2);border-color:var(--accent2);color:#fff}
 main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:13px}
 .card{background:var(--surface);border:1px solid var(--border-light);border-radius:var(--r);padding:15px;box-shadow:var(--sh);transition:all .15s;display:flex;flex-direction:column;gap:9px}
-.card:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(58,111,216,.12);transform:translateY(-2px)}
+.card:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(47,111,78,.12);transform:translateY(-2px)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:9px}
 .card-title-area{flex:1}
 .recipe-name{font-size:.87rem;font-weight:600;line-height:1.35;color:var(--text)}
@@ -66,7 +65,7 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
 .safe-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;color:var(--green);font-size:.67rem;font-weight:600}
 .diet-row{display:flex;flex-wrap:wrap;gap:4px}
 .diet-tag{font-size:.61rem;font-weight:600;padding:2px 7px;border-radius:9px;background:#eefaf4;border:1px solid #b8eacf;color:#1a7a4a}
-.btn-details{display:flex;align-items:center;gap:4px;padding:5px 10px;background:#f0f5ff;border:1.5px solid var(--border);border-radius:7px;color:var(--accent);font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;width:fit-content}
+.btn-details{display:flex;align-items:center;gap:4px;padding:5px 10px;background:#eaf3ec;border:1.5px solid var(--border);border-radius:7px;color:var(--accent);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;width:fit-content}
 .btn-details:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,60,.45);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
@@ -77,7 +76,7 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
 .modal-sub{font-size:.73rem;color:var(--muted);margin-top:3px}
 .btn-close{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .btn-close:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
-.btn-back{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;flex-shrink:0}
+.btn-back{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;flex-shrink:0}
 .btn-back:hover{border-color:var(--accent);color:var(--accent)}
 .ing-line{padding:6px 0;border-bottom:1px dashed var(--border-light);display:flex;flex-wrap:wrap;align-items:center;gap:5px}
 .ing-line:last-child{border-bottom:none}
@@ -98,8 +97,8 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
 .empty-icon{font-size:42px;margin-bottom:12px}
 .empty h3{font-size:.98rem;color:var(--text2);margin-bottom:5px}
 .show-more-wrap{text-align:center;padding:22px 0 0}
-#show-more{padding:10px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:50px;color:var(--text2);font-family:'Inter',sans-serif;font-size:.83rem;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:var(--sh)}
-#show-more:hover{border-color:var(--accent);color:var(--accent);background:#f0f5ff}
+#show-more{padding:10px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:50px;color:var(--text2);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.83rem;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:var(--sh)}
+#show-more:hover{border-color:var(--accent);color:var(--accent);background:#eaf3ec}
 @media(max-width:600px){
   header{padding:13px 12px 11px}h1{font-size:1.1rem}
   .grid{grid-template-columns:1fr}.nut-grid{grid-template-columns:repeat(2,1fr)}
@@ -113,13 +112,7 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
   <a class="chef-login-link" href="./chef.html">👨‍🍳 Chef Login</a>
   <a class="admin-login-link" href="./admin.html">🔐 Admin Login</a>
   <div class="header-top">
-    <div class="logo-icon">
-      <svg viewBox="0 0 100 100" width="22" height="22" fill="none">
-        <circle cx="50" cy="50" r="41" stroke="#fff" stroke-width="5" stroke-dasharray="7 9"/>
-        <path d="M30 70 V30 L50 56 L70 30 V70" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </div>
-    <h1>Nutri<span>ziz</span></h1>
+    <h1>nutr<span class="i-accent">i</span><span class="ziz">ziz</span></h1>
   </div>
   <div class="tagline">Recipe &amp; Product Allergen Database</div>
   <div class="search-wrap">
