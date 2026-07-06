@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nutriziz — Chef Portal</title>
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<script>
+(function(){
+  var saved = localStorage.getItem('nutriziz-theme');
+  if(saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -22,7 +28,39 @@
   --mono:'IBM Plex Mono',monospace;
   --sh-lg:-16px 0 40px rgba(30,42,34,.16)
 }
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11160e;--surface:#171d13;--surface2:#1b2216;
+    --border:#2c3524;--border-light:#232b1c;
+    --accent:#6fbf8f;--accent2:#e2955c;
+    --text:#eaf0e4;--text2:#b7c0ac;--muted:#818a72;--faint:#5b6350;
+    --red:#e8837e;--red-bg:#2a1a19;--red-border:#4a2b29;
+    --amber:#e6ac4c;--amber-bg:#2a2417;--amber-border:#4a3e28;
+    --green:#5fd097;--green-bg:#182920;--green-border:#274a37;
+    --sh-lg:-16px 0 40px rgba(0,0,0,.45)
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11160e;--surface:#171d13;--surface2:#1b2216;
+  --border:#2c3524;--border-light:#232b1c;
+  --accent:#6fbf8f;--accent2:#e2955c;
+  --text:#eaf0e4;--text2:#b7c0ac;--muted:#818a72;--faint:#5b6350;
+  --red:#e8837e;--red-bg:#2a1a19;--red-border:#4a2b29;
+  --amber:#e6ac4c;--amber-bg:#2a2417;--amber-border:#4a3e28;
+  --green:#5fd097;--green-bg:#182920;--green-border:#274a37;
+  --sh-lg:-16px 0 40px rgba(0,0,0,.45)
+}
+:root[data-theme="light"]{
+  --bg:#fbfbf9;--surface:#fff;--surface2:#f6f7f2;
+  --border:#d7ddd2;--border-light:#e3e8de;
+  --accent:#2f6f4e;--accent2:#c8703a;
+  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;--faint:#a8a296;
+  --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
+  --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
+  --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --sh-lg:-16px 0 40px rgba(30,42,34,.16)
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
 h1{font-size:1rem;font-weight:600}
 h1 .i-accent{color:var(--accent)}
@@ -30,6 +68,8 @@ h1 .ziz{color:var(--accent2);font-weight:700}
 button{font-family:var(--font);cursor:pointer}
 .btn{padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text2);font-size:.78rem;font-weight:600}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
+#theme-toggle{position:fixed;top:16px;right:16px;z-index:500;width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+#theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
 .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn-primary:hover{background:var(--accent2);border-color:var(--accent2);color:#fff}
 .btn-danger{background:none;border-color:var(--red-border);color:var(--red)}
@@ -86,6 +126,8 @@ tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
+
+<button id="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
 
 <div id="auth-screen">
   <h2>👨‍🍳 Chef Portal</h2>
@@ -591,6 +633,20 @@ onAuthStateChanged(auth, async (user)=>{
     showScreen('rejected-screen');
   }
 });
+
+function currentTheme(){
+  return document.documentElement.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyThemeIcon(){
+  document.getElementById('theme-toggle').textContent = currentTheme()==='dark' ? '☀️' : '🌙';
+}
+document.getElementById('theme-toggle').addEventListener('click', ()=>{
+  const next = currentTheme()==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('nutriziz-theme', next);
+  applyThemeIcon();
+});
+applyThemeIcon();
 </script>
 </body>
 </html>

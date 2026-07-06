@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nutriziz — Allergen Database</title>
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<script>
+(function(){
+  var saved = localStorage.getItem('nutriziz-theme');
+  if(saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -18,17 +24,55 @@
   --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
   --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
   --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --olive:#3a4025;--olive-text:#bcc39c;--olive-text-active:#dcec8e;
   --font:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --mono:'IBM Plex Mono',monospace;
   --sh-lg:-16px 0 40px rgba(30,42,34,.16)
 }
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11160e;--surface:#171d13;--surface2:#1b2216;
+    --border:#2c3524;--border-light:#232b1c;
+    --accent:#6fbf8f;--accent2:#e2955c;
+    --text:#eaf0e4;--text2:#b7c0ac;--muted:#818a72;--faint:#5b6350;
+    --red:#e8837e;--red-bg:#2a1a19;--red-border:#4a2b29;
+    --amber:#e6ac4c;--amber-bg:#2a2417;--amber-border:#4a3e28;
+    --green:#5fd097;--green-bg:#182920;--green-border:#274a37;
+    --olive:#242a15;--olive-text:#8f9877;--olive-text-active:#dcec8e;
+    --sh-lg:-16px 0 40px rgba(0,0,0,.45)
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11160e;--surface:#171d13;--surface2:#1b2216;
+  --border:#2c3524;--border-light:#232b1c;
+  --accent:#6fbf8f;--accent2:#e2955c;
+  --text:#eaf0e4;--text2:#b7c0ac;--muted:#818a72;--faint:#5b6350;
+  --red:#e8837e;--red-bg:#2a1a19;--red-border:#4a2b29;
+  --amber:#e6ac4c;--amber-bg:#2a2417;--amber-border:#4a3e28;
+  --green:#5fd097;--green-bg:#182920;--green-border:#274a37;
+  --olive:#242a15;--olive-text:#8f9877;--olive-text-active:#dcec8e;
+  --sh-lg:-16px 0 40px rgba(0,0,0,.45)
+}
+:root[data-theme="light"]{
+  --bg:#fbfbf9;--surface:#fff;--surface2:#f6f7f2;
+  --border:#d7ddd2;--border-light:#e3e8de;
+  --accent:#2f6f4e;--accent2:#c8703a;
+  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;--faint:#a8a296;
+  --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
+  --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
+  --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --olive:#3a4025;--olive-text:#bcc39c;--olive-text-active:#dcec8e;
+  --sh-lg:-16px 0 40px rgba(30,42,34,.16)
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s}
 ::selection{background:#c8703a33}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:22px 24px 0;text-align:center;position:sticky;top:0;z-index:100}
 .header-row{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
 .header-links{display:flex;gap:10px;font-size:.72rem;font-weight:600}
 .chef-login-link,.admin-login-link{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);text-decoration:none;transition:all .15s}
 .chef-login-link:hover,.admin-login-link:hover{border-color:var(--accent);color:var(--accent)}
+#theme-toggle{width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+#theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
 .header-top{display:flex;align-items:center;justify-content:center;gap:10px}
 h1{font-size:1.2rem;font-weight:600;letter-spacing:-.02em}
 h1 .i-accent{color:var(--accent)}
@@ -43,14 +87,14 @@ h1 .ziz{color:var(--accent2);font-weight:700}
 .stats-bar b{color:var(--text2);font-weight:600;font-family:var(--mono)}
 .credit{font-size:.68rem;color:var(--muted);padding-bottom:12px;margin-top:-8px}
 .credit b{color:var(--text2)}
-.source-tabs{display:flex;gap:0;justify-content:center}
-.tab{padding:10px 22px;border:none;border-bottom:2.5px solid transparent;background:none;color:var(--muted);font-family:var(--font);font-size:.75rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;transition:all .15s}
-.tab:hover{color:var(--accent)}
-.tab.active{border-bottom-color:var(--accent);color:var(--accent)}
+.source-tabs{display:flex;gap:0;justify-content:center;background:var(--olive);border-bottom:1px solid var(--border-light)}
+.tab{padding:10px 22px;border:none;border-bottom:2.5px solid transparent;background:none;color:var(--olive-text);font-family:var(--font);font-size:.75rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.tab:hover{color:var(--olive-text-active)}
+.tab.active{border-bottom-color:var(--olive-text-active);color:var(--olive-text-active)}
 main{max-width:920px;margin:0 auto;padding:26px 14px 60px}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border-light);border-left:1px solid var(--border-light)}
-.card{background:var(--surface);border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);padding:18px;transition:background .12s;display:flex;flex-direction:column;gap:9px;cursor:pointer}
-.card:hover{background:var(--surface2)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.card{background:var(--surface);border:1px solid var(--border-light);border-radius:8px;padding:18px;transition:all .15s;display:flex;flex-direction:column;gap:9px;cursor:pointer}
+.card:hover{background:var(--surface2);border-color:var(--accent)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:9px}
 .card-title-area{flex:1}
 .recipe-name{font-size:.83rem;font-weight:600;line-height:1.4;color:var(--text)}
@@ -115,6 +159,7 @@ main{max-width:920px;margin:0 auto;padding:26px 14px 60px}
       <h1>nutr<span class="i-accent">i</span><span class="ziz">ziz</span></h1>
     </div>
     <div class="header-links">
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
       <a class="chef-login-link" href="./chef.html">👨‍🍳 Chef Login</a>
       <a class="admin-login-link" href="./admin.html">🔐 Admin Login</a>
     </div>
@@ -364,6 +409,19 @@ document.querySelectorAll('.tab[data-source]').forEach(b=>b.addEventListener('cl
   b.classList.add('active');curSource=b.dataset.source;render(true);
 }));
 document.getElementById('show-more').addEventListener('click',()=>render(false));
+function currentTheme(){
+  return document.documentElement.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyThemeIcon(){
+  document.getElementById('theme-toggle').textContent = currentTheme()==='dark' ? '☀️' : '🌙';
+}
+document.getElementById('theme-toggle').addEventListener('click', ()=>{
+  const next = currentTheme()==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('nutriziz-theme', next);
+  applyThemeIcon();
+});
+applyThemeIcon();
 loadData();
 </script>
 </body>
