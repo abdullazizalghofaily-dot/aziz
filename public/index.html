@@ -5,114 +5,119 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nutriziz — Allergen Database</title>
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f6f7f2;--surface:#fff;--surface2:#e4ede6;
+  --bg:#fbfbf9;--surface:#fff;--surface2:#f6f7f2;
   --border:#d7ddd2;--border-light:#e3e8de;
   --accent:#2f6f4e;--accent2:#c8703a;
-  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;
+  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;--faint:#a8a296;
   --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
   --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
   --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
-  --r:14px;--sh:0 2px 12px rgba(30,42,34,.08);--sh-lg:0 8px 40px rgba(30,42,34,.15)
+  --font:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --sh-lg:-16px 0 40px rgba(30,42,34,.16)
 }
-body{font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 28px 16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,42,34,.07)}
-.chef-login-link{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:.75rem;font-weight:600;text-decoration:none;transition:all .15s}
-.chef-login-link:hover{border-color:var(--accent);color:var(--accent);background:#eaf3ec}
-.admin-login-link{position:absolute;top:16px;right:16px;display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:.75rem;font-weight:600;text-decoration:none;transition:all .15s}
-.admin-login-link:hover{border-color:var(--accent);color:var(--accent);background:#eaf3ec}
-.header-top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px}
-h1{font-size:1.6rem;font-weight:500;letter-spacing:-.01em}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
+::selection{background:#c8703a33}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:22px 24px 0;text-align:center;position:sticky;top:0;z-index:100}
+.header-row{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.header-links{display:flex;gap:10px;font-size:.72rem;font-weight:600}
+.chef-login-link,.admin-login-link{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);text-decoration:none;transition:all .15s}
+.chef-login-link:hover,.admin-login-link:hover{border-color:var(--accent);color:var(--accent)}
+.header-top{display:flex;align-items:center;justify-content:center;gap:10px}
+h1{font-size:1.2rem;font-weight:600;letter-spacing:-.02em}
 h1 .i-accent{color:var(--accent)}
-h1 .ziz{color:var(--accent2);font-weight:800}
-.tagline{font-size:.76rem;color:var(--muted);margin-top:2px}
-.search-wrap{position:relative;max-width:600px;margin:0 auto}
-.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
-#search{width:100%;padding:12px 18px 12px 42px;background:var(--surface2);border:1.5px solid var(--border);border-radius:50px;color:var(--text);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.9rem;outline:none;transition:all .2s}
-#search:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(47,111,78,.12)}
-#search::placeholder{color:var(--muted)}
-.stats-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px 0 0;font-size:.74rem;color:var(--muted)}
-.stats-bar b{color:var(--text2);font-weight:600}
-.credit{font-size:.7rem;color:var(--muted);margin-top:6px}
+h1 .ziz{color:var(--accent2);font-weight:700}
+.tagline{font-size:.78rem;color:var(--muted);margin:14px 0}
+.search-wrap{position:relative;max-width:560px;margin:0 auto 14px}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
+#search{width:100%;padding:12px 16px 12px 40px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.85rem;outline:none;transition:all .15s}
+#search:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px rgba(47,111,78,.1)}
+#search::placeholder{color:var(--faint)}
+.stats-bar{font-size:.72rem;color:var(--muted);padding-bottom:12px}
+.stats-bar b{color:var(--text2);font-weight:600;font-family:var(--mono)}
+.credit{font-size:.68rem;color:var(--muted);padding-bottom:12px;margin-top:-8px}
 .credit b{color:var(--text2)}
-.source-tabs{display:flex;gap:6px;justify-content:center;padding:11px 20px 0;flex-wrap:wrap}
-.tab{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.71rem;font-weight:600;cursor:pointer;transition:all .15s}
-.tab:hover{border-color:var(--accent2);color:var(--accent2)}
-.tab.active{background:var(--accent2);border-color:var(--accent2);color:#fff}
-main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:13px}
-.card{background:var(--surface);border:1px solid var(--border-light);border-radius:var(--r);padding:15px;box-shadow:var(--sh);transition:all .15s;display:flex;flex-direction:column;gap:9px}
-.card:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(47,111,78,.12);transform:translateY(-2px)}
+.source-tabs{display:flex;gap:0;justify-content:center}
+.tab{padding:10px 22px;border:none;border-bottom:2.5px solid transparent;background:none;color:var(--muted);font-family:var(--font);font-size:.75rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.tab:hover{color:var(--accent)}
+.tab.active{border-bottom-color:var(--accent);color:var(--accent)}
+main{max-width:920px;margin:0 auto;padding:26px 14px 60px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border-light);border-left:1px solid var(--border-light)}
+.card{background:var(--surface);border-right:1px solid var(--border-light);border-bottom:1px solid var(--border-light);padding:18px;transition:background .12s;display:flex;flex-direction:column;gap:9px;cursor:pointer}
+.card:hover{background:var(--surface2)}
 .card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:9px}
 .card-title-area{flex:1}
-.recipe-name{font-size:.87rem;font-weight:600;line-height:1.35;color:var(--text)}
-.recipe-meta{font-size:.67rem;color:var(--muted);margin-top:3px}
-.source-tag{font-size:.59rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 6px;border-radius:5px;margin-top:4px;display:inline-block}
-.source-tag.products{background:#eef3ff;color:var(--accent)}
-.source-tag.recipes{background:#f2eeff;color:var(--accent2)}
-.kcal-badge{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;border-radius:8px;padding:5px 9px;font-size:.79rem;font-weight:700;white-space:nowrap;flex-shrink:0;text-align:center;line-height:1.2}
-.kcal-badge small{font-size:.57rem;opacity:.85;display:block;font-weight:400}
-.sec-label{font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.recipe-name{font-size:.83rem;font-weight:600;line-height:1.4;color:var(--text)}
+.recipe-meta{font-size:.66rem;color:var(--faint);margin-top:4px}
+.kcal-badge{font-family:var(--mono);font-size:.83rem;font-weight:600;color:var(--accent);white-space:nowrap;flex-shrink:0}
+.kcal-badge small{font-size:.55rem;color:var(--muted);display:block;font-weight:500;font-family:var(--font)}
+.sec-label{font-family:var(--mono);font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
 .sec-label.contains{color:var(--red)}
 .sec-label.may{color:var(--amber)}
-.allergen-icons{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
-.ap{display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:.66rem;font-weight:600}
-.ap.contains{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
-.ap.may{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber)}
-.ap .pi{font-size:12px}
-.safe-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:20px;color:var(--green);font-size:.67rem;font-weight:600}
+.allergen-icons{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:2px}
+.ap{display:inline-flex;align-items:center;padding:3px 8px;border-radius:4px;font-size:.6rem;font-weight:600;font-family:var(--mono)}
+.ap.contains{background:none;border:1px solid var(--red-border);color:var(--red)}
+.ap.may{background:none;border:1px solid var(--amber-border);color:var(--amber)}
+.safe-badge{display:inline-flex;align-items:center;padding:3px 9px;border:1px solid var(--green-border);border-radius:4px;color:var(--green);font-size:.62rem;font-weight:600;font-family:var(--mono)}
 .diet-row{display:flex;flex-wrap:wrap;gap:4px}
-.diet-tag{font-size:.61rem;font-weight:600;padding:2px 7px;border-radius:9px;background:#eefaf4;border:1px solid #b8eacf;color:#1a7a4a}
-.btn-details{display:flex;align-items:center;gap:4px;padding:5px 10px;background:#eaf3ec;border:1.5px solid var(--border);border-radius:7px;color:var(--accent);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.68rem;font-weight:600;cursor:pointer;transition:all .15s;width:fit-content}
-.btn-details:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,60,.45);z-index:1000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px)}
+.diet-tag{font-size:.6rem;font-weight:600;padding:2px 7px;border-radius:4px;background:none;border:1px solid var(--green-border);color:var(--green)}
+.btn-details{display:inline-flex;align-items:center;padding:5px 12px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--accent);font-family:var(--font);font-size:.65rem;font-weight:600;cursor:pointer;transition:all .15s;width:fit-content}
+.btn-details:hover{border-color:var(--accent);background:var(--surface2)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,20,.35);z-index:1000;align-items:stretch;justify-content:flex-end;padding:0}
 .modal-overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:18px;width:100%;max-width:600px;max-height:88vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:mIn .2s ease}
-@keyframes mIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:none}}
-.modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border-light);position:sticky;top:0;background:var(--surface);border-radius:18px 18px 0 0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.modal-title{font-size:.98rem;font-weight:700;line-height:1.3}
-.modal-sub{font-size:.73rem;color:var(--muted);margin-top:3px}
-.btn-close{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.btn-close:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
-.btn-back{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;flex-shrink:0}
+.modal{background:var(--surface);width:380px;max-width:92vw;height:100%;max-height:100vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:mIn .2s ease;margin-left:auto}
+@keyframes mIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.modal-header{padding:22px 24px 14px;border-bottom:1px solid var(--border-light);position:sticky;top:0;background:var(--surface);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.modal-title{font-size:.95rem;font-weight:700;line-height:1.3}
+.modal-sub{font-size:.7rem;color:var(--muted);margin-top:4px}
+.btn-close{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:none;color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.btn-close:hover{border-color:var(--red);color:var(--red)}
+.btn-back{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text2);font-family:var(--font);font-size:.72rem;font-weight:600;cursor:pointer;flex-shrink:0}
 .btn-back:hover{border-color:var(--accent);color:var(--accent)}
-.ing-line{padding:6px 0;border-bottom:1px dashed var(--border-light);display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.ing-line{padding:5px 0;border-bottom:1px dashed var(--border-light);display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:.73rem;color:var(--text2)}
 .ing-line:last-child{border-bottom:none}
-.ing-line.linked{cursor:pointer;color:var(--accent2)}
+.ing-line.linked{cursor:pointer;color:var(--accent2);font-weight:500}
 .ing-line.linked:hover{text-decoration:underline}
-.modal-body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:18px}
+.modal-body{padding:22px 24px 30px;display:flex;flex-direction:column;gap:18px}
 .detail-section{}
-.detail-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
-.detail-value{font-size:.82rem;color:var(--text2);line-height:1.7}
-.nut-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
-.nut-cell{background:var(--surface2);border-radius:9px;padding:9px 6px;text-align:center}
-.nut-val{font-size:.98rem;font-weight:700}
-.nut-unit{font-size:.58rem;color:var(--muted)}
-.nut-lbl{font-size:.61rem;color:var(--text2);margin-top:2px;font-weight:500}
-.method-box{background:var(--surface2);border-radius:10px;padding:13px 15px;font-size:.81rem;color:var(--text2);line-height:1.75;white-space:pre-wrap;border-left:3px solid var(--accent)}
-.ing-box{background:#fafbff;border:1px solid var(--border-light);border-radius:10px;padding:13px 15px;font-size:.79rem;color:var(--text2);line-height:1.75;white-space:pre-wrap}
+.detail-label{font-family:var(--mono);font-size:.58rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px}
+.detail-value{font-size:.78rem;color:var(--text2);line-height:1.7}
+.nut-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border-light)}
+.nut-cell{padding:9px 4px;text-align:center;border-right:1px solid var(--border-light)}
+.nut-cell:last-child{border-right:none}
+.nut-val{font-family:var(--mono);font-size:.88rem;font-weight:600}
+.nut-unit{display:none}
+.nut-lbl{font-size:.6rem;color:var(--muted);margin-top:2px;font-weight:500}
+.method-box{background:var(--surface2);border-radius:0 6px 6px 0;padding:12px 14px;font-size:.76rem;color:var(--text2);line-height:1.75;white-space:pre-wrap;border-left:3px solid var(--accent)}
+.ing-box{font-size:.73rem;color:var(--text2);line-height:1.75;white-space:pre-wrap}
 .empty{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1/-1}
 .empty-icon{font-size:42px;margin-bottom:12px}
 .empty h3{font-size:.98rem;color:var(--text2);margin-bottom:5px}
 .show-more-wrap{text-align:center;padding:22px 0 0}
-#show-more{padding:10px 32px;background:var(--surface);border:1.5px solid var(--border);border-radius:50px;color:var(--text2);font-family:'Century Gothic','Avenir Next','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:.83rem;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:var(--sh)}
-#show-more:hover{border-color:var(--accent);color:var(--accent);background:#eaf3ec}
-@media(max-width:600px){
-  header{padding:13px 12px 11px}h1{font-size:1.1rem}
+#show-more{padding:10px 28px;background:none;border:1px solid var(--border);border-radius:20px;color:var(--text2);font-family:var(--font);font-size:.78rem;font-weight:500;cursor:pointer;transition:all .15s}
+#show-more:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:640px){
   .grid{grid-template-columns:1fr}.nut-grid{grid-template-columns:repeat(2,1fr)}
-  .chef-login-link{position:static;display:inline-flex;margin-bottom:8px}
-  .admin-login-link{position:static;display:inline-flex;margin-bottom:8px;margin-left:8px}
+  .nut-cell:nth-child(2){border-right:none}
 }
 </style>
 </head>
 <body>
 <header>
-  <a class="chef-login-link" href="./chef.html">👨‍🍳 Chef Login</a>
-  <a class="admin-login-link" href="./admin.html">🔐 Admin Login</a>
-  <div class="header-top">
-    <h1>nutr<span class="i-accent">i</span><span class="ziz">ziz</span></h1>
+  <div class="header-row">
+    <div class="header-top">
+      <h1>nutr<span class="i-accent">i</span><span class="ziz">ziz</span></h1>
+    </div>
+    <div class="header-links">
+      <a class="chef-login-link" href="./chef.html">👨‍🍳 Chef Login</a>
+      <a class="admin-login-link" href="./admin.html">🔐 Admin Login</a>
+    </div>
   </div>
   <div class="tagline">Recipe &amp; Product Allergen Database</div>
   <div class="search-wrap">
@@ -126,8 +131,8 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
 </header>
 <div class="source-tabs">
   <button class="tab active" data-source="all">All</button>
-  <button class="tab" data-source="products">📦 Products</button>
-  <button class="tab" data-source="recipes">📋 Recipes</button>
+  <button class="tab" data-source="products">Products</button>
+  <button class="tab" data-source="recipes">Recipes</button>
 </div>
 <main>
   <div class="grid" id="grid"></div>
@@ -245,29 +250,28 @@ function getFiltered(){
   if(q) r=r.map(x=>[x,scoreM(x.name,q)]).filter(([,s])=>s>0).sort(([,a],[,b])=>b-a).map(([x])=>x);
   return r;
 }
-function pills(list,cls){return(list||[]).map(a=>`<div class="ap ${cls}"><span class="pi">${AI[a]||'⚠️'}</span>${a}</div>`).join('')}
+function pills(list,cls){return(list||[]).map(a=>`<span class="ap ${cls}">${a}</span>`).join('')}
 function buildCard(r,idx){
   const kcal=r.kcal!=null?parseFloat(r.kcal).toFixed(0):'—';
   const d=r.details||{};
-  const meta=[d.brand&&'🏷️ '+d.brand,d.category].filter(Boolean).join(' · ');
+  const meta=[d.brand&&'🏷️ '+d.brand,d.category].filter(Boolean).join(' · ')||(r.source==='recipes'?'Recipe':'Product');
   const c=r.contains||[],m=r.may_contain||[];
-  let alHTML=c.length===0&&m.length===0?'<div class="safe-badge">✅ No allergens</div>':'';
-  if(c.length) alHTML+=`<div class="sec-label contains">⚠️ Contains</div><div class="allergen-icons">${pills(c,'contains')}</div>`;
-  if(m.length) alHTML+=`<div class="sec-label may">〰️ May Contain</div><div class="allergen-icons">${pills(m,'may')}</div>`;
+  let alHTML=c.length===0&&m.length===0?'<span class="safe-badge">No allergens</span>':'';
+  if(c.length) alHTML+=`<div class="sec-label contains">Contains</div><div class="allergen-icons">${pills(c,'contains')}</div>`;
+  if(m.length) alHTML+=`<div class="sec-label may">May Contain</div><div class="allergen-icons">${pills(m,'may')}</div>`;
   const diet=(r.diet||[]).map(dt=>`<span class="diet-tag">${dt}</span>`).join('');
   const hasD=d.ingredients||d.country||d.brand||d.description||d.notes||d.fat!=null||d.protein!=null||d.carbs!=null||d.method;
-  return `<div class="card">
+  return `<div class="card" onclick="openView(${idx})">
     <div class="card-top">
       <div class="card-title-area">
         <div class="recipe-name">${r.name}</div>
-        ${meta?`<div class="recipe-meta">${meta}</div>`:''}
-        <span class="source-tag ${r.source}">${r.source==='products'?'📦 Product':'📋 Recipe'}</span>
+        <div class="recipe-meta">${meta}</div>
       </div>
       <div class="kcal-badge">${kcal}<small>kcal/100g</small></div>
     </div>
     <div>${alHTML}</div>
     ${diet?`<div class="diet-row">${diet}</div>`:''}
-    ${hasD?`<button class="btn-details" onclick="openView(${idx})">📋 View Details</button>`:''}
+    ${hasD?`<div class="btn-details">Details →</div>`:''}
   </div>`;
 }
 function render(reset=true){
@@ -292,8 +296,8 @@ function ingredientLineHTML(line){
   const match=matchIngredientLine(line);
   if(!match) return `<div class="ing-line">${esc(line)}</div>`;
   const c=match.contains||[],m=match.may_contain||[];
-  const tags=[...c.map(a=>`<span class="ap contains">${AI[a]||'⚠️'} ${a}</span>`),
-              ...m.map(a=>`<span class="ap may">${AI[a]||'⚠️'} ${a}</span>`)].join('');
+  const tags=[...c.map(a=>`<span class="ap contains">${a}</span>`),
+              ...m.map(a=>`<span class="ap may">${a}</span>`)].join('');
   return `<div class="ing-line linked" onclick="showDetailsById('${match.id}')">${esc(line)}${tags}</div>`;
 }
 let viewStack=[],currentRecord=null;
@@ -305,25 +309,25 @@ function showDetails(r){
   const kc=r.kcal!=null?parseFloat(r.kcal).toFixed(0):'—';
   const fat=d.fat!=null?d.fat+'g':'—',prot=d.protein!=null?d.protein+'g':'—',carb=d.carbs!=null?d.carbs+'g':'—';
   const c=r.contains||[],m=r.may_contain||[];
-  const ap=[...c.map(a=>`<span class="ap contains" style="display:inline-flex;margin:2px">${AI[a]||'⚠️'} ${a}</span>`),
-            ...m.map(a=>`<span class="ap may" style="display:inline-flex;margin:2px">${AI[a]||'⚠️'} ${a}</span>`)];
+  const ap=[...c.map(a=>`<span class="ap contains" style="display:inline-flex;margin:2px">${a}</span>`),
+            ...m.map(a=>`<span class="ap may" style="display:inline-flex;margin:2px">${a}</span>`)];
   let b='';
-  b+=`<div class="detail-section"><div class="detail-label">Nutrition per 100g</div><div class="nut-grid">
-    <div class="nut-cell"><div class="nut-val">${kc}</div><div class="nut-unit">kcal</div><div class="nut-lbl">Energy</div></div>
-    <div class="nut-cell"><div class="nut-val">${fat}</div><div class="nut-unit">per 100g</div><div class="nut-lbl">Fat</div></div>
-    <div class="nut-cell"><div class="nut-val">${prot}</div><div class="nut-unit">per 100g</div><div class="nut-lbl">Protein</div></div>
-    <div class="nut-cell"><div class="nut-val">${carb}</div><div class="nut-unit">per 100g</div><div class="nut-lbl">Carbs</div></div>
+  b+=`<div class="detail-section"><div class="detail-label">Nutrition / 100g</div><div class="nut-grid">
+    <div class="nut-cell"><div class="nut-val">${kc}</div><div class="nut-lbl">kcal</div></div>
+    <div class="nut-cell"><div class="nut-val">${fat}</div><div class="nut-lbl">fat</div></div>
+    <div class="nut-cell"><div class="nut-val">${prot}</div><div class="nut-lbl">prot</div></div>
+    <div class="nut-cell"><div class="nut-val">${carb}</div><div class="nut-lbl">carb</div></div>
   </div></div>`;
-  b+=`<div class="detail-section"><div class="detail-label">Allergens</div>${ap.length?`<div style="display:flex;flex-wrap:wrap;gap:3px">${ap.join('')}</div>`:'<div class="safe-badge">✅ No allergens</div>'}</div>`;
-  if(d.brand||d.country) b+=`<div class="detail-section"><div class="detail-label">Product Info</div><div class="detail-value">${[d.brand&&`<b>Brand:</b> ${esc(d.brand)}`,d.country&&`<b>Country:</b> ${esc(d.country)}`].filter(Boolean).join('<br>')}</div></div>`;
+  b+=`<div class="detail-section"><div class="detail-label">Allergens</div>${ap.length?`<div style="display:flex;flex-wrap:wrap;gap:3px">${ap.join('')}</div>`:'<span class="safe-badge">No allergens</span>'}</div>`;
+  if(d.brand||d.country) b+=`<div class="detail-section"><div class="detail-label">Product Info</div><div class="detail-value">${[d.brand&&`Brand: ${esc(d.brand)}`,d.country&&`Country: ${esc(d.country)}`].filter(Boolean).join('  ·  ')}</div></div>`;
   if(r.diet?.length) b+=`<div class="detail-section"><div class="detail-label">Dietary</div><div style="display:flex;gap:4px;flex-wrap:wrap">${r.diet.map(dt=>`<span class="diet-tag">${dt}</span>`).join('')}</div></div>`;
   if(d.ingredients){
     const body=r.source==='recipes'
       ?d.ingredients.split('\n').map(ingredientLineHTML).join('')
       :esc(d.ingredients);
-    b+=`<div class="detail-section"><div class="detail-label">🥕 Food Ingredients</div><div class="ing-box">${body}</div></div>`;
+    b+=`<div class="detail-section"><div class="detail-label">🥕 Ingredients</div><div class="ing-box">${body}</div></div>`;
   }
-  if(d.method) b+=`<div class="detail-section"><div class="detail-label">👨‍🍳 Recipe Method</div><div class="method-box">${esc(d.method)}</div></div>`;
+  if(d.method) b+=`<div class="detail-section"><div class="detail-label">👨‍🍳 Method</div><div class="method-box">${esc(d.method)}</div></div>`;
   if(d.description) b+=`<div class="detail-section"><div class="detail-label">Description</div><div class="detail-value">${esc(d.description)}</div></div>`;
   if(d.notes) b+=`<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-value">${esc(d.notes)}</div></div>`;
   document.getElementById('view-body').innerHTML=b;
