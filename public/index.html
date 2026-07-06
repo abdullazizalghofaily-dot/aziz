@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEOM Allergen Database</title>
+<title>Nutriziz — Allergen Database</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -27,6 +28,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:2
 .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
 h1{font-size:1.35rem;font-weight:700;letter-spacing:-.02em}
 h1 span{color:var(--accent)}
+.tagline{font-size:.76rem;color:var(--muted);margin-top:2px}
 .search-wrap{position:relative;max-width:600px;margin:0 auto}
 .search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
 #search{width:100%;padding:12px 18px 12px 42px;background:var(--surface2);border:1.5px solid var(--border);border-radius:50px;color:var(--text);font-family:'Inter',sans-serif;font-size:.9rem;outline:none;transition:all .2s}
@@ -111,9 +113,15 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
   <a class="chef-login-link" href="./chef.html">👨‍🍳 Chef Login</a>
   <a class="admin-login-link" href="./admin.html">🔐 Admin Login</a>
   <div class="header-top">
-    <div class="logo-icon">🍽️</div>
-    <h1>Recipe &amp; Product <span>Allergen</span> Database</h1>
+    <div class="logo-icon">
+      <svg viewBox="0 0 100 100" width="22" height="22" fill="none">
+        <circle cx="50" cy="50" r="41" stroke="#fff" stroke-width="5" stroke-dasharray="7 9"/>
+        <path d="M30 70 V30 L50 56 L70 30 V70" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1>Nutri<span>ziz</span></h1>
   </div>
+  <div class="tagline">Recipe &amp; Product Allergen Database</div>
   <div class="search-wrap">
     <span class="search-icon">🔍</span>
     <input type="text" id="search" placeholder="Search... e.g. chicken, hummus, cheddar" autocomplete="off" autofocus>
