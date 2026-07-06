@@ -71,6 +71,12 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
 .modal-sub{font-size:.73rem;color:var(--muted);margin-top:3px}
 .btn-close{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .btn-close:hover{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.btn-back{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-family:'Inter',sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;flex-shrink:0}
+.btn-back:hover{border-color:var(--accent);color:var(--accent)}
+.ing-line{padding:6px 0;border-bottom:1px dashed var(--border-light);display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.ing-line:last-child{border-bottom:none}
+.ing-line.linked{cursor:pointer;color:var(--accent2)}
+.ing-line.linked:hover{text-decoration:underline}
 .modal-body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:18px}
 .detail-section{}
 .detail-label{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
@@ -122,7 +128,10 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
   <div class="modal">
     <div class="modal-header">
       <div><div class="modal-title" id="view-title"></div><div class="modal-sub" id="view-sub"></div></div>
-      <button class="btn-close" onclick="closeModal('view-modal')">✕</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-back" id="view-back" style="display:none" onclick="goBack()">← Back</button>
+        <button class="btn-close" onclick="closeModal('view-modal')">✕</button>
+      </div>
     </div>
     <div class="modal-body" id="view-body"></div>
   </div>
@@ -144,13 +153,14 @@ async function loadData(){
   if(cached){
     try{
       const {ts,items}=JSON.parse(cached);
-      if(Date.now()-ts<CACHE_TTL_MS){DATA=items;render(true);return;}
+      if(Date.now()-ts<CACHE_TTL_MS){DATA=items;indexData();render(true);return;}
     }catch(e){}
   }
   grid.innerHTML='<div class="empty"><div class="empty-icon">⏳</div><h3>Loading database…</h3></div>';
   try{
     const snap=await getDocs(collection(db,'products'));
     DATA=snap.docs.map(d=>({id:d.id,...d.data()}));
+    indexData();
     localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),items:DATA}));
   }catch(e){
     console.error('Failed to load products from Firestore',e);
@@ -169,6 +179,44 @@ function scoreM(name,q){
   if(n.startsWith(qn))return 3;if(n.includes(qn))return 2;
   const w=qn.split(' ').filter(Boolean),h=w.filter(x=>n.includes(x));
   return h.length===w.length?1:h.length>0?.5:0;
+}
+
+let DATA_BY_ID=new Map(),NAME_INDEX=new Map();
+function indexData(){
+  DATA_BY_ID=new Map();NAME_INDEX=new Map();
+  DATA.forEach(rec=>{
+    DATA_BY_ID.set(String(rec.id),rec);
+    const k=norm(rec.name||'');
+    if(!NAME_INDEX.has(k)) NAME_INDEX.set(k,[]);
+    NAME_INDEX.get(k).push(rec);
+  });
+}
+const QTY_RE=/^(.*?)\s*-\s*[\d.,\/]+\s*(?:g|kg|ml|l)\s*$/i;
+function tokenScore(name,query){
+  const nTokens=norm(name).split(' ').filter(Boolean),qTokens=norm(query).split(' ').filter(Boolean);
+  if(qTokens.length<2) return 0;
+  let matchedCount=0;
+  for(const qt of qTokens){
+    const found=nTokens.some(nt=>nt===qt||(Math.abs(nt.length-qt.length)<=2&&(nt.startsWith(qt)||qt.startsWith(nt))));
+    if(found) matchedCount++;
+  }
+  if(matchedCount!==qTokens.length) return 0;
+  const diff=Math.abs(nTokens.length-qTokens.length);
+  if(diff>3) return 0;
+  return 1+(1/(1+diff));
+}
+function matchIngredientLine(line){
+  const m=line.match(QTY_RE);
+  const base=(m?m[1]:line).trim();
+  if(!base) return null;
+  const exact=NAME_INDEX.get(norm(base));
+  if(exact&&exact.length) return exact[0];
+  let best=null,bestScore=0;
+  DATA.forEach(rec=>{
+    const s=tokenScore(rec.name,base);
+    if(s>bestScore){bestScore=s;best=rec;}
+  });
+  return best;
 }
 function getFiltered(){
   let r=DATA;
@@ -218,8 +266,19 @@ function render(reset=true){
   if(rem>0) btn.textContent=`Show more (${rem.toLocaleString()} remaining)`;
 }
 function esc(t){return t?String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
-function openView(idx){
-  const r=filtered[idx];
+function ingredientLineHTML(line){
+  line=line.trim();
+  if(!line) return '';
+  const match=matchIngredientLine(line);
+  if(!match) return `<div class="ing-line">${esc(line)}</div>`;
+  const c=match.contains||[],m=match.may_contain||[];
+  const tags=[...c.map(a=>`<span class="ap contains">${AI[a]||'⚠️'} ${a}</span>`),
+              ...m.map(a=>`<span class="ap may">${AI[a]||'⚠️'} ${a}</span>`)].join('');
+  return `<div class="ing-line linked" onclick="showDetailsById('${match.id}')">${esc(line)}${tags}</div>`;
+}
+let viewStack=[],currentRecord=null;
+function showDetails(r){
+  currentRecord=r;
   const d=r.details||{};
   document.getElementById('view-title').textContent=r.name;
   document.getElementById('view-sub').textContent=[d.brand,d.category].filter(Boolean).join(' · ');
@@ -238,17 +297,40 @@ function openView(idx){
   b+=`<div class="detail-section"><div class="detail-label">Allergens</div>${ap.length?`<div style="display:flex;flex-wrap:wrap;gap:3px">${ap.join('')}</div>`:'<div class="safe-badge">✅ No allergens</div>'}</div>`;
   if(d.brand||d.country) b+=`<div class="detail-section"><div class="detail-label">Product Info</div><div class="detail-value">${[d.brand&&`<b>Brand:</b> ${esc(d.brand)}`,d.country&&`<b>Country:</b> ${esc(d.country)}`].filter(Boolean).join('<br>')}</div></div>`;
   if(r.diet?.length) b+=`<div class="detail-section"><div class="detail-label">Dietary</div><div style="display:flex;gap:4px;flex-wrap:wrap">${r.diet.map(dt=>`<span class="diet-tag">${dt}</span>`).join('')}</div></div>`;
-  if(d.ingredients) b+=`<div class="detail-section"><div class="detail-label">🥕 Food Ingredients</div><div class="ing-box">${esc(d.ingredients)}</div></div>`;
+  if(d.ingredients){
+    const body=r.source==='recipes'
+      ?d.ingredients.split('\n').map(ingredientLineHTML).join('')
+      :esc(d.ingredients);
+    b+=`<div class="detail-section"><div class="detail-label">🥕 Food Ingredients</div><div class="ing-box">${body}</div></div>`;
+  }
   if(d.method) b+=`<div class="detail-section"><div class="detail-label">👨‍🍳 Recipe Method</div><div class="method-box">${esc(d.method)}</div></div>`;
   if(d.description) b+=`<div class="detail-section"><div class="detail-label">Description</div><div class="detail-value">${esc(d.description)}</div></div>`;
   if(d.notes) b+=`<div class="detail-section"><div class="detail-label">Notes</div><div class="detail-value">${esc(d.notes)}</div></div>`;
   document.getElementById('view-body').innerHTML=b;
+  document.getElementById('view-back').style.display=viewStack.length?'inline-block':'none';
+}
+function openView(idx){
+  viewStack=[];
+  showDetails(filtered[idx]);
   document.getElementById('view-modal').classList.add('open');
   document.body.style.overflow='hidden';
+}
+function showDetailsById(id){
+  const rec=DATA_BY_ID.get(String(id));
+  if(!rec) return;
+  if(currentRecord) viewStack.push(currentRecord);
+  showDetails(rec);
+  document.getElementById('view-body').scrollTop=0;
+}
+function goBack(){
+  const prev=viewStack.pop();
+  if(prev) showDetails(prev);
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
 window.openView=openView;
 window.closeModal=closeModal;
+window.showDetailsById=showDetailsById;
+window.goBack=goBack;
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));});
 let deb;
