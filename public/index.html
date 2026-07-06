@@ -162,16 +162,18 @@ async function loadData(){
   if(cached){
     try{ cachedParsed=JSON.parse(cached); }catch(e){}
   }
-  try{
-    const countSnap=await getCountFromServer(collection(db,'products'));
-    const currentCount=countSnap.data().count;
-    if(cachedParsed && cachedParsed.count===currentCount && Date.now()-cachedParsed.ts<CACHE_TTL_MS){
-      DATA=cachedParsed.items;indexData();render(true);return;
+  let useCache=false;
+  if(cachedParsed && Date.now()-cachedParsed.ts<CACHE_TTL_MS){
+    try{
+      const countSnap=await getCountFromServer(collection(db,'products'));
+      useCache = cachedParsed.count===countSnap.data().count;
+    }catch(e){
+      console.error('Catalog count check failed, forcing a fresh fetch',e);
+      useCache=false;
     }
-  }catch(e){
-    if(cachedParsed && Date.now()-cachedParsed.ts<CACHE_TTL_MS){
-      DATA=cachedParsed.items;indexData();render(true);return;
-    }
+  }
+  if(useCache){
+    DATA=cachedParsed.items;indexData();render(true);return;
   }
   grid.innerHTML='<div class="empty"><div class="empty-icon">⏳</div><h3>Loading database…</h3></div>';
   try{
