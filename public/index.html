@@ -21,6 +21,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 28px 16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(30,40,100,.07)}
 .chef-login-link{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:.75rem;font-weight:600;text-decoration:none;transition:all .15s}
 .chef-login-link:hover{border-color:var(--accent);color:var(--accent);background:#f0f5ff}
+.admin-login-link{position:absolute;top:16px;right:16px;display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:.75rem;font-weight:600;text-decoration:none;transition:all .15s}
+.admin-login-link:hover{border-color:var(--accent);color:var(--accent);background:#f0f5ff}
 .header-top{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px}
 .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
 h1{font-size:1.35rem;font-weight:700;letter-spacing:-.02em}
@@ -100,12 +102,14 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
   header{padding:13px 12px 11px}h1{font-size:1.1rem}
   .grid{grid-template-columns:1fr}.nut-grid{grid-template-columns:repeat(2,1fr)}
   .chef-login-link{position:static;display:inline-flex;margin-bottom:8px}
+  .admin-login-link{position:static;display:inline-flex;margin-bottom:8px;margin-left:8px}
 }
 </style>
 </head>
 <body>
 <header>
   <a class="chef-login-link" href="./chef.html">👨‍🍳 Chef Login</a>
+  <a class="admin-login-link" href="./admin.html">🔐 Admin Login</a>
   <div class="header-top">
     <div class="logo-icon">🍽️</div>
     <h1>Recipe &amp; Product <span>Allergen</span> Database</h1>
@@ -142,7 +146,7 @@ main{max-width:1120px;margin:0 auto;padding:18px 14px 0}
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig);
@@ -154,18 +158,27 @@ let DATA=[];
 async function loadData(){
   const grid=document.getElementById('grid');
   const cached=localStorage.getItem(CACHE_KEY);
+  let cachedParsed=null;
   if(cached){
-    try{
-      const {ts,items}=JSON.parse(cached);
-      if(Date.now()-ts<CACHE_TTL_MS){DATA=items;indexData();render(true);return;}
-    }catch(e){}
+    try{ cachedParsed=JSON.parse(cached); }catch(e){}
+  }
+  try{
+    const countSnap=await getCountFromServer(collection(db,'products'));
+    const currentCount=countSnap.data().count;
+    if(cachedParsed && cachedParsed.count===currentCount && Date.now()-cachedParsed.ts<CACHE_TTL_MS){
+      DATA=cachedParsed.items;indexData();render(true);return;
+    }
+  }catch(e){
+    if(cachedParsed && Date.now()-cachedParsed.ts<CACHE_TTL_MS){
+      DATA=cachedParsed.items;indexData();render(true);return;
+    }
   }
   grid.innerHTML='<div class="empty"><div class="empty-icon">⏳</div><h3>Loading database…</h3></div>';
   try{
     const snap=await getDocs(collection(db,'products'));
     DATA=snap.docs.map(d=>({id:d.id,...d.data()}));
     indexData();
-    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),items:DATA}));
+    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),count:DATA.length,items:DATA}));
   }catch(e){
     console.error('Failed to load products from Firestore',e);
     grid.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load database</h3><p>Check your Firebase configuration and connection</p></div>';
