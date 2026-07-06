@@ -80,6 +80,13 @@ td.actions{display:flex;gap:6px;justify-content:flex-end}
     </div>
   </header>
   <main>
+    <div id="chef-requests-section" style="display:none;margin-bottom:22px">
+      <div style="font-size:.85rem;font-weight:700;color:var(--text2);margin-bottom:8px">👨‍🍳 Pending Chef Requests</div>
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th></th></tr></thead>
+        <tbody id="chef-requests-body"></tbody>
+      </table>
+    </div>
     <div class="toolbar">
       <input type="text" id="admin-search" placeholder="Search products…">
       <button class="btn btn-primary" id="add-btn">+ Add Product</button>
@@ -141,7 +148,7 @@ td.actions{display:flex;gap:6px;justify-content:flex-end}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc
+  getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc, query, where, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
@@ -180,6 +187,42 @@ async function loadData(){
   DATA = snap.docs.map(d=>({id:d.id, ...d.data()}));
   applyFilter();
 }
+
+async function loadChefRequests(){
+  const q = query(collection(db,'chefs'), where('status','==','pending'));
+  const snap = await getDocs(q);
+  const section = document.getElementById('chef-requests-section');
+  const tbody = document.getElementById('chef-requests-body');
+  if(snap.empty){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  tbody.innerHTML = snap.docs.map(d=>{
+    const c = d.data();
+    return `<tr data-uid="${d.id}">
+      <td>${c.name||''}</td>
+      <td>${c.email||''}</td>
+      <td class="row-actions-cell">
+        <button class="btn btn-primary" data-action="approve" data-uid="${d.id}">Approve</button>
+        <button class="btn btn-danger" data-action="reject" data-uid="${d.id}">Reject</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+document.getElementById('chef-requests-body').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const uid = btn.dataset.uid;
+  const status = btn.dataset.action==='approve' ? 'approved' : 'rejected';
+  try{
+    await updateDoc(doc(db,'chefs',uid), {status});
+    showStatus(status==='approved' ? 'Chef approved' : 'Chef rejected');
+    await loadChefRequests();
+  }catch(err){
+    showStatus('Action failed: '+err.message, false);
+  }
+});
 
 function applyFilter(){
   const q = document.getElementById('admin-search').value.trim().toLowerCase();
@@ -331,6 +374,7 @@ onAuthStateChanged(auth, (user)=>{
     document.getElementById('app-screen').style.display = 'block';
     document.getElementById('user-email').textContent = user.email;
     loadData();
+    loadChefRequests();
   } else {
     document.getElementById('login-screen').style.display = 'block';
     document.getElementById('app-screen').style.display = 'none';
