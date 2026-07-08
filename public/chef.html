@@ -268,6 +268,11 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+async function bumpCatalogVersion(){
+  try{ await setDoc(doc(db,'meta','catalog'), {updatedAt: serverTimestamp()}, {merge:true}); }
+  catch(e){ console.error('Failed to bump catalog version', e); }
+}
+
 const ALLERGENS = ['Gluten','Tree nuts','Peanuts','Eggs','Milk','Fish','Crustaceans','Molluscs','Celery','Mustard','Sesame','Soya','Sulphites','Lupin'];
 
 let MY_DATA = [];
@@ -579,6 +584,7 @@ async function saveRecipe(){
     } else {
       await addDoc(collection(db,'products'), payload);
     }
+    await bumpCatalogVersion();
     showStatus('Saved successfully');
     closeModal();
     await loadMyData(user.uid);
@@ -601,6 +607,7 @@ document.getElementById('table-body').addEventListener('click', async (e)=>{
     if(!confirm(`Delete "${item?.name}"? This cannot be undone.`)) return;
     try{
       await deleteDoc(doc(db,'products',id));
+      await bumpCatalogVersion();
       showStatus('Deleted');
       await loadMyData(auth.currentUser.uid);
     }catch(err){

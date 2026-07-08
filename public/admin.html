@@ -233,7 +233,7 @@ td.actions{display:flex;gap:6px;justify-content:flex-end}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc, query, where, updateDoc
+  getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc, query, where, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
@@ -243,6 +243,11 @@ import { firebaseConfig } from "./firebase-config.js";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+
+async function bumpCatalogVersion(){
+  try{ await setDoc(doc(db,'meta','catalog'), {updatedAt: serverTimestamp()}, {merge:true}); }
+  catch(e){ console.error('Failed to bump catalog version', e); }
+}
 
 const ALLERGENS = ['Gluten','Tree nuts','Peanuts','Eggs','Milk','Fish','Crustaceans','Molluscs','Celery','Mustard','Sesame','Soya','Sulphites','Lupin'];
 const PAGE = 30;
@@ -553,6 +558,7 @@ async function saveProduct(){
     } else {
       await addDoc(collection(db,'products'), payload);
     }
+    await bumpCatalogVersion();
     showStatus('Saved successfully');
     closeModal();
     await loadData();
@@ -578,6 +584,7 @@ document.getElementById('table-body').addEventListener('click', async (e)=>{
     if(!confirm(`Delete "${item?.name}"? This cannot be undone.`)) return;
     try{
       await deleteDoc(doc(db,'products',id));
+      await bumpCatalogVersion();
       showStatus('Deleted');
       await loadData();
     }catch(err){

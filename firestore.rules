@@ -30,5 +30,10 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
     }
+
+    match /meta/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isApprovedChef();
+    }
   }
 }

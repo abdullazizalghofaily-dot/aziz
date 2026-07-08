@@ -197,12 +197,12 @@ main{max-width:920px;margin:0 auto;padding:26px 14px 60px}
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const CACHE_KEY = 'neom_products_cache_v1';
+const CACHE_KEY = 'neom_products_cache_v2';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const AI={'Gluten':'🌾','Tree nuts':'🌰','Peanuts':'🥜','Eggs':'🥚','Milk':'🥛','Fish':'🐟','Crustaceans':'🦐','Molluscs':'🦑','Celery':'🥬','Mustard':'🌼','Sesame':'🫘','Soya':'🫛','Sulphites':'⚗️','Lupin':'🌿'};
 let DATA=[];
@@ -216,10 +216,11 @@ async function loadData(){
   let useCache=false;
   if(cachedParsed && Date.now()-cachedParsed.ts<CACHE_TTL_MS){
     try{
-      const countSnap=await getCountFromServer(collection(db,'products'));
-      useCache = cachedParsed.count===countSnap.data().count;
+      const metaSnap=await getDoc(doc(db,'meta','catalog'));
+      const serverVersion=metaSnap.exists()?metaSnap.data().updatedAt?.toMillis?.():null;
+      useCache = serverVersion!=null && cachedParsed.version===serverVersion;
     }catch(e){
-      console.error('Catalog count check failed, forcing a fresh fetch',e);
+      console.error('Catalog version check failed, forcing a fresh fetch',e);
       useCache=false;
     }
   }
@@ -228,10 +229,11 @@ async function loadData(){
   }
   grid.innerHTML='<div class="empty"><div class="empty-icon">⏳</div><h3>Loading database…</h3></div>';
   try{
-    const snap=await getDocs(collection(db,'products'));
+    const [snap,metaSnap]=await Promise.all([getDocs(collection(db,'products')),getDoc(doc(db,'meta','catalog'))]);
     DATA=snap.docs.map(d=>({id:d.id,...d.data()}));
     indexData();
-    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),count:DATA.length,items:DATA}));
+    const version=metaSnap.exists()?metaSnap.data().updatedAt?.toMillis?.()??null:null;
+    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),version,items:DATA}));
   }catch(e){
     console.error('Failed to load products from Firestore',e);
     grid.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load database</h3><p>Check your Firebase configuration and connection</p></div>';
