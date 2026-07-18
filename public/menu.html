@@ -79,13 +79,23 @@ h1{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
 main{max-width:1000px;margin:0 auto;padding:26px 16px 60px}
 .date-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:26px}
 .date-bar label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-family:var(--mono)}
-#date-select,#category-select{padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none;cursor:pointer}
 .menu-no-tag{font-family:var(--mono);font-size:.68rem;color:var(--accent2);font-weight:600;padding:4px 10px;border:1px solid var(--border);border-radius:6px}
 .field-group{display:flex;align-items:center;gap:8px}
 .meal-tabs{display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px}
 .meal-tab{padding:7px 14px;border:none;border-radius:6px;background:none;color:var(--text2);font-family:var(--font);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
 .meal-tab:hover{color:var(--accent)}
 .meal-tab.active{background:var(--accent);color:#fff}
+.dd{position:relative}
+.dd-btn{display:inline-flex;align-items:center;gap:10px;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.82rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.dd-btn:hover{border-color:var(--accent)}
+.dd.open .dd-btn{border-color:var(--accent)}
+.dd-chevron{font-size:.6rem;color:var(--muted);transition:transform .15s}
+.dd.open .dd-chevron{transform:rotate(180deg)}
+.dd-panel{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:100%;max-height:280px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:var(--sh-lg);z-index:200;padding:4px}
+.dd.open .dd-panel{display:block}
+.dd-item{padding:9px 14px;font-size:.82rem;color:var(--text2);border-radius:6px;cursor:pointer;white-space:nowrap;transition:all .1s}
+.dd-item:hover{background:var(--surface2);color:var(--text)}
+.dd-item.selected{background:var(--accent);color:#fff;font-weight:600}
 .meal-section{margin-bottom:34px}
 .meal-title{font-size:1rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .cat-block{border:1px solid var(--border-light);border-radius:8px;margin-bottom:12px;overflow:hidden}
@@ -142,16 +152,26 @@ main{max-width:1000px;margin:0 auto;padding:26px 16px 60px}
 <main>
   <div class="date-bar">
     <div class="field-group">
-      <label for="date-select">Date</label>
-      <select id="date-select"></select>
+      <label>Date</label>
+      <div class="dd" id="date-dd">
+        <button type="button" class="dd-btn" id="date-dd-btn" aria-haspopup="listbox" aria-expanded="false">
+          <span id="date-dd-label"></span><span class="dd-chevron">▾</span>
+        </button>
+        <div class="dd-panel" id="date-dd-panel" role="listbox"></div>
+      </div>
     </div>
     <div class="field-group">
       <label>Meal</label>
       <div class="meal-tabs" id="meal-tabs"></div>
     </div>
     <div class="field-group">
-      <label for="category-select">Section</label>
-      <select id="category-select"></select>
+      <label>Section</label>
+      <div class="dd" id="category-dd">
+        <button type="button" class="dd-btn" id="category-dd-btn" aria-haspopup="listbox" aria-expanded="false">
+          <span id="category-dd-label"></span><span class="dd-chevron">▾</span>
+        </button>
+        <div class="dd-panel" id="category-dd-panel" role="listbox"></div>
+      </div>
     </div>
     <span class="menu-no-tag" id="menu-no-tag"></span>
   </div>
@@ -246,16 +266,15 @@ async function loadMenu(){
   ALL_DATES = [...dateSet].sort();
   if(!ALL_DATES.length){
     content.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><h3>No menu has been uploaded yet</h3></div>';
-    document.getElementById('date-select').innerHTML='';
+    document.getElementById('date-dd-panel').innerHTML='';
     document.getElementById('meal-tabs').innerHTML='';
-    document.getElementById('category-select').innerHTML='';
+    document.getElementById('category-dd-panel').innerHTML='';
     return;
   }
-  populateDateSelect();
   populateMealTabs();
   currentDate = defaultDate();
-  document.getElementById('date-select').value = currentDate;
-  populateCategorySelect();
+  populateDateDropdown();
+  populateCategoryDropdown();
   renderView();
 }
 
@@ -271,16 +290,6 @@ function fmtDateLabel(iso){
   return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
 }
 
-function populateDateSelect(){
-  const sel = document.getElementById('date-select');
-  sel.innerHTML = ALL_DATES.map(d => `<option value="${d}">${fmtDateLabel(d)}</option>`).join('');
-  sel.addEventListener('change', () => {
-    currentDate = sel.value;
-    populateCategorySelect();
-    renderView();
-  });
-}
-
 function populateMealTabs(){
   const wrap = document.getElementById('meal-tabs');
   wrap.innerHTML = MEALS.map(m => `<button type="button" class="meal-tab${m.key===currentMeal?' active':''}" data-meal="${m.key}">${m.label}</button>`).join('');
@@ -289,7 +298,7 @@ function populateMealTabs(){
       currentMeal = btn.dataset.meal;
       currentCategory = 'ALL';
       wrap.querySelectorAll('.meal-tab').forEach(b => b.classList.toggle('active', b===btn));
-      populateCategorySelect();
+      populateCategoryDropdown();
       renderView();
     });
   });
@@ -306,14 +315,63 @@ function categoriesFor(mealKey, dateIso){
   return cats;
 }
 
-function populateCategorySelect(){
-  const sel = document.getElementById('category-select');
+// ---- Custom dropdown component (replaces native <select> for a themed popup) ----
+function renderDropdown(prefix, items, selectedValue, onSelect){
+  const label = document.getElementById(prefix+'-dd-label');
+  const panel = document.getElementById(prefix+'-dd-panel');
+  const selectedItem = items.find(i => i.value === selectedValue);
+  label.textContent = selectedItem ? selectedItem.label : '';
+  panel.innerHTML = items.map(i => `<div class="dd-item${i.value===selectedValue?' selected':''}" data-value="${esc(i.value)}" role="option">${esc(i.label)}</div>`).join('');
+  panel.querySelectorAll('.dd-item').forEach(el => {
+    el.addEventListener('click', () => {
+      closeDropdown(prefix);
+      onSelect(el.dataset.value);
+    });
+  });
+}
+function toggleDropdown(prefix){
+  const dd = document.getElementById(prefix+'-dd');
+  const wasOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if(!wasOpen){
+    dd.classList.add('open');
+    document.getElementById(prefix+'-dd-btn').setAttribute('aria-expanded','true');
+  }
+}
+function closeDropdown(prefix){
+  document.getElementById(prefix+'-dd').classList.remove('open');
+  document.getElementById(prefix+'-dd-btn').setAttribute('aria-expanded','false');
+}
+function closeAllDropdowns(){
+  document.querySelectorAll('.dd.open').forEach(d => {
+    d.classList.remove('open');
+    d.querySelector('.dd-btn')?.setAttribute('aria-expanded','false');
+  });
+}
+document.addEventListener('click', e => { if(!e.target.closest('.dd')) closeAllDropdowns(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeAllDropdowns(); });
+document.getElementById('date-dd-btn').addEventListener('click', () => toggleDropdown('date'));
+document.getElementById('category-dd-btn').addEventListener('click', () => toggleDropdown('category'));
+
+function populateDateDropdown(){
+  const items = ALL_DATES.map(d => ({ value: d, label: fmtDateLabel(d) }));
+  renderDropdown('date', items, currentDate, (val) => {
+    currentDate = val;
+    populateCategoryDropdown();
+    renderView();
+    populateDateDropdown();
+  });
+}
+
+function populateCategoryDropdown(){
   const cats = categoriesFor(currentMeal, currentDate);
-  const options = ['<option value="ALL">All Sections</option>', ...cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`)];
-  sel.innerHTML = options.join('');
   if(currentCategory !== 'ALL' && !cats.includes(currentCategory)) currentCategory = 'ALL';
-  sel.value = currentCategory;
-  sel.onchange = () => { currentCategory = sel.value; renderView(); };
+  const items = [{ value: 'ALL', label: 'All Sections' }, ...cats.map(c => ({ value: c, label: c }))];
+  renderDropdown('category', items, currentCategory, (val) => {
+    currentCategory = val;
+    renderView();
+    populateCategoryDropdown();
+  });
 }
 
 function menuNoFor(mealKey, dateIso){
