@@ -10,6 +10,10 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/chefs/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/chefs/$(request.auth.uid)).data.status == 'approved';
     }
+    function isMenuEditor() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/menuEditors/$(request.auth.uid));
+    }
 
     match /products/{productId} {
       allow read: if true;
@@ -34,6 +38,16 @@ service cloud.firestore {
     match /meta/{docId} {
       allow read: if true;
       allow write: if isAdmin() || isApprovedChef();
+    }
+
+    match /menu/{mealId} {
+      allow read: if true;
+      allow write: if isAdmin() || isMenuEditor();
+    }
+
+    match /menuEditors/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
     }
   }
 }

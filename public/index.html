@@ -69,8 +69,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:22px 24px 0;text-align:center;position:sticky;top:0;z-index:100}
 .header-row{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
 .header-links{display:flex;gap:10px;font-size:.72rem;font-weight:600}
-.chef-login-link,.admin-login-link{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);text-decoration:none;transition:all .15s}
-.chef-login-link:hover,.admin-login-link:hover{border-color:var(--accent);color:var(--accent)}
+.menu-link,.chef-login-link,.admin-login-link{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);text-decoration:none;transition:all .15s}
+.menu-link:hover,.chef-login-link:hover,.admin-login-link:hover{border-color:var(--accent);color:var(--accent)}
 #theme-toggle{width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
 #theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
 .header-top{display:flex;align-items:center;justify-content:center;gap:10px}
@@ -160,6 +160,7 @@ main{max-width:920px;margin:0 auto;padding:26px 14px 60px}
     </div>
     <div class="header-links">
       <button id="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
+      <a class="menu-link" href="./menu.html">📅 Menu</a>
       <a class="chef-login-link" href="./chef.html">👨‍🍳 Chef Login</a>
       <a class="admin-login-link" href="./admin.html">🔐 Admin Login</a>
     </div>

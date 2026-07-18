@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nutriziz — Terrace Cycle Menu</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<script>
+(function(){
+  var saved = localStorage.getItem('nutriziz-theme');
+  if(saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#eeece3;--surface:#f6f5ef;--surface2:#e7e5da;
+  --border:#c9cfbd;--border-light:#d6dac8;
+  --accent:#2f6f4e;--accent2:#c8703a;
+  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;--faint:#a8a296;
+  --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
+  --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
+  --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --olive:#3a4025;--olive-text:#bcc39c;--olive-text-active:#dcec8e;
+  --font:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --sh-lg:-16px 0 40px rgba(30,42,34,.16)
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11160e;--surface:#171d13;--surface2:#1b2216;
+    --border:#2c3524;--border-light:#232b1c;
+    --accent:#6fbf8f;--accent2:#e2955c;
+    --text:#eaf0e4;--text2:#b7c0ac;--muted:#818a72;--faint:#5b6350;
+    --red:#e8837e;--red-bg:#2a1a19;--red-border:#4a2b29;
+    --amber:#e6ac4c;--amber-bg:#2a2417;--amber-border:#4a3e28;
+    --green:#5fd097;--green-bg:#182920;--green-border:#274a37;
+    --olive:#242a15;--olive-text:#8f9877;--olive-text-active:#dcec8e;
+    --sh-lg:-16px 0 40px rgba(0,0,0,.45)
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11160e;--surface:#171d13;--surface2:#1b2216;
+  --border:#2c3524;--border-light:#232b1c;
+  --accent:#6fbf8f;--accent2:#e2955c;
+  --text:#eaf0e4;--text2:#b7c0ac;--muted:#818a72;--faint:#5b6350;
+  --red:#e8837e;--red-bg:#2a1a19;--red-border:#4a2b29;
+  --amber:#e6ac4c;--amber-bg:#2a2417;--amber-border:#4a3e28;
+  --green:#5fd097;--green-bg:#182920;--green-border:#274a37;
+  --olive:#242a15;--olive-text:#8f9877;--olive-text-active:#dcec8e;
+  --sh-lg:-16px 0 40px rgba(0,0,0,.45)
+}
+:root[data-theme="light"]{
+  --bg:#eeece3;--surface:#f6f5ef;--surface2:#e7e5da;
+  --border:#c9cfbd;--border-light:#d6dac8;
+  --accent:#2f6f4e;--accent2:#c8703a;
+  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;--faint:#a8a296;
+  --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
+  --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
+  --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --olive:#3a4025;--olive-text:#bcc39c;--olive-text-active:#dcec8e;
+  --sh-lg:-16px 0 40px rgba(30,42,34,.16)
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:22px 24px;position:sticky;top:0;z-index:100}
+.header-row{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+.header-left{display:flex;align-items:center;gap:12px}
+.back-link{color:var(--text2);text-decoration:none;font-size:.8rem;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+.back-link:hover{color:var(--accent)}
+h1{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+.header-links{display:flex;gap:10px;font-size:.72rem;font-weight:600;align-items:center}
+#theme-toggle{width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+#theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.btn-edit{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-family:var(--font);font-size:.72rem;font-weight:600;transition:all .15s}
+.btn-edit:hover{border-color:var(--accent);color:var(--accent)}
+main{max-width:1000px;margin:0 auto;padding:26px 16px 60px}
+.date-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:26px}
+.date-bar label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-family:var(--mono)}
+#date-select{padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none;cursor:pointer}
+.menu-no-tag{font-family:var(--mono);font-size:.68rem;color:var(--accent2);font-weight:600;padding:4px 10px;border:1px solid var(--border);border-radius:6px}
+.meal-section{margin-bottom:34px}
+.meal-title{font-size:1rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.cat-block{border:1px solid var(--border-light);border-radius:8px;margin-bottom:12px;overflow:hidden}
+.cat-header{background:var(--olive);color:var(--olive-text-active);font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:9px 16px;font-family:var(--mono)}
+.station-row{display:flex;padding:9px 16px;border-top:1px solid var(--border-light);font-size:.8rem}
+.station-row:first-of-type{border-top:none}
+.station-label{width:220px;flex-shrink:0;color:var(--muted);font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.03em;font-family:var(--mono)}
+.dish-name{color:var(--text2)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:42px;margin-bottom:12px}
+/* Edit panel */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,20,.35);z-index:1000;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);width:420px;max-width:92vw;max-height:88vh;overflow-y:auto;border-radius:12px;box-shadow:var(--sh-lg);animation:mIn .2s ease}
+@keyframes mIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+.modal-header{padding:22px 24px 14px;border-bottom:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-radius:12px 12px 0 0}
+.modal-title{font-size:.95rem;font-weight:700}
+.btn-close{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:none;color:var(--muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-close:hover{border-color:var(--red);color:var(--red)}
+.modal-body{padding:22px 24px 28px;display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-family:var(--mono)}
+.field input[type=email],.field input[type=password]{padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none}
+.field input:focus{border-color:var(--accent)}
+.btn-primary{padding:10px 16px;background:var(--accent);border:none;border-radius:6px;color:#fff;font-family:var(--font);font-size:.8rem;font-weight:600;cursor:pointer}
+.btn-primary:hover{opacity:.9}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.msg{font-size:.75rem;padding:9px 12px;border-radius:6px;display:none}
+.msg.ok{display:block;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.msg.err{display:block;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.editor-name{font-size:.78rem;color:var(--text2)}
+.file-input-wrap{border:1.5px dashed var(--border);border-radius:8px;padding:18px;text-align:center;font-size:.76rem;color:var(--muted)}
+.file-input-wrap input{margin-top:8px}
+.link-btn{background:none;border:none;color:var(--accent);text-decoration:underline;cursor:pointer;font-family:var(--font);font-size:.72rem;padding:0}
+@media(max-width:640px){
+  .station-row{flex-direction:column;gap:2px}
+  .station-label{width:auto}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-row">
+    <div class="header-left">
+      <a class="back-link" href="./index.html">← nutriziz</a>
+      <h1>📅 Terrace Cycle Menu</h1>
+    </div>
+    <div class="header-links">
+      <button id="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
+      <button class="btn-edit" id="edit-btn" type="button">✏️ Edit Menu</button>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="date-bar">
+    <label for="date-select">Date</label>
+    <select id="date-select"></select>
+    <span class="menu-no-tag" id="menu-no-tag"></span>
+  </div>
+  <div id="menu-content"></div>
+</main>
+
+<!-- Edit gate modal: login -->
+<div class="modal-overlay" id="login-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Menu</div>
+      <button class="btn-close" onclick="closeModal('login-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="msg" id="login-msg"></div>
+      <div class="field"><label>Email</label><input type="email" id="editor-email" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input type="password" id="editor-password" autocomplete="current-password"></div>
+      <button class="btn-primary" id="login-submit">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload modal: shown once signed in and authorized -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Edit Menu</div><div class="editor-name" id="editor-name-tag"></div></div>
+      <button class="btn-close" onclick="closeModal('upload-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="msg" id="upload-msg"></div>
+      <div class="file-input-wrap">
+        Upload a new TERRACE_CYCLE_MENU .xlsx file to replace the entire menu.<br>
+        <input type="file" id="menu-file" accept=".xlsx">
+      </div>
+      <button class="btn-primary" id="upload-submit">Save New Menu</button>
+      <button class="link-btn" id="logout-btn" type="button">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<!-- Unauthorized notice -->
+<div class="modal-overlay" id="unauthorized-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Not Authorized</div>
+      <button class="btn-close" onclick="closeModal('unauthorized-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-value" style="font-size:.82rem;color:var(--text2)">This account is not authorized to edit the menu.</div>
+      <button class="link-btn" id="unauthorized-logout-btn" type="button">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const MEALS = [
+  { key: 'breakfast', label: '🍳 Breakfast' },
+  { key: 'lunch', label: '🍽️ Lunch' },
+  { key: 'dinner', label: '🌙 Dinner' }
+];
+
+let MENU = {}; // key -> {dates:[{date,menuNo}], rows:[{category,station,values}]}
+let ALL_DATES = []; // union of dates across meals, sorted
+
+async function loadMenu(){
+  const content = document.getElementById('menu-content');
+  content.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><h3>Loading menu…</h3></div>';
+  try{
+    const snaps = await Promise.all(MEALS.map(m => getDoc(doc(db,'menu',m.key))));
+    snaps.forEach((snap, i) => { MENU[MEALS[i].key] = snap.exists() ? snap.data() : { dates: [], rows: [] }; });
+  }catch(e){
+    console.error('Failed to load menu', e);
+    content.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load the menu</h3></div>';
+    return;
+  }
+  const dateSet = new Set();
+  MEALS.forEach(m => (MENU[m.key].dates||[]).forEach(d => dateSet.add(d.date)));
+  ALL_DATES = [...dateSet].sort();
+  if(!ALL_DATES.length){
+    content.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><h3>No menu has been uploaded yet</h3></div>';
+    document.getElementById('date-select').innerHTML='';
+    return;
+  }
+  populateDateSelect();
+  renderDate(defaultDate());
+}
+
+function defaultDate(){
+  const todayIso = new Date().toISOString().slice(0,10);
+  if(ALL_DATES.includes(todayIso)) return todayIso;
+  const next = ALL_DATES.find(d => d > todayIso);
+  return next || ALL_DATES[ALL_DATES.length-1];
+}
+
+function fmtDateLabel(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+}
+
+function populateDateSelect(){
+  const sel = document.getElementById('date-select');
+  sel.innerHTML = ALL_DATES.map(d => `<option value="${d}">${fmtDateLabel(d)}</option>`).join('');
+  sel.addEventListener('change', () => renderDate(sel.value));
+}
+
+function menuNoFor(mealKey, dateIso){
+  const entry = (MENU[mealKey].dates||[]).find(d => d.date === dateIso);
+  return entry ? entry.menuNo : '';
+}
+
+function esc(t){return t?String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+
+function renderDate(dateIso){
+  document.getElementById('date-select').value = dateIso;
+  const tags = MEALS.map(m => menuNoFor(m.key, dateIso)).filter(Boolean);
+  document.getElementById('menu-no-tag').textContent = tags.length ? tags[0] : '';
+
+  const content = document.getElementById('menu-content');
+  let html = '';
+  for(const meal of MEALS){
+    const rows = (MENU[meal.key].rows||[]).filter(r => r.values && r.values[dateIso]);
+    html += `<div class="meal-section"><div class="meal-title">${meal.label}</div>`;
+    if(!rows.length){
+      html += `<div class="empty-state" style="padding:20px"><span style="font-size:.8rem">No ${meal.key} menu for this date</span></div>`;
+    } else {
+      const cats = [];
+      const byCat = new Map();
+      rows.forEach(r => {
+        const cat = r.category || '—';
+        if(!byCat.has(cat)){ byCat.set(cat, []); cats.push(cat); }
+        byCat.get(cat).push(r);
+      });
+      cats.forEach(cat => {
+        html += `<div class="cat-block"><div class="cat-header">${esc(cat)}</div>`;
+        let lastStation = null;
+        byCat.get(cat).forEach(r => {
+          const showStation = r.station && r.station !== lastStation;
+          lastStation = r.station || lastStation;
+          html += `<div class="station-row"><span class="station-label">${showStation?esc(r.station):''}</span><span class="dish-name">${esc(r.values[dateIso])}</span></div>`;
+        });
+        html += `</div>`;
+      });
+    }
+    html += `</div>`;
+  }
+  content.innerHTML = html;
+}
+
+loadMenu();
+
+// ---- Theme toggle ----
+function currentTheme(){
+  const attr = document.documentElement.getAttribute('data-theme');
+  if(attr) return attr;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+function applyThemeIcon(){
+  document.getElementById('theme-toggle').textContent = currentTheme()==='dark' ? '☀️' : '🌙';
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const next = currentTheme()==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('nutriziz-theme', next);
+  applyThemeIcon();
+});
+applyThemeIcon();
+
+// ---- Edit gate ----
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+window.closeModal = function(id){ document.getElementById(id).classList.remove('open'); };
+
+document.getElementById('edit-btn').addEventListener('click', async () => {
+  if(auth.currentUser){
+    await checkAuthorizationAndOpen(auth.currentUser);
+  } else {
+    openModal('login-modal');
+  }
+});
+
+async function checkAuthorizationAndOpen(user){
+  try{
+    const editorSnap = await getDoc(doc(db,'menuEditors',user.uid));
+    if(editorSnap.exists()){
+      document.getElementById('editor-name-tag').textContent = editorSnap.data().name ? `Signed in as ${editorSnap.data().name}` : '';
+      openModal('upload-modal');
+    } else {
+      openModal('unauthorized-modal');
+    }
+  }catch(e){
+    console.error('Authorization check failed', e);
+    openModal('unauthorized-modal');
+  }
+}
+
+document.getElementById('login-submit').addEventListener('click', async () => {
+  const email = document.getElementById('editor-email').value.trim();
+  const password = document.getElementById('editor-password').value;
+  const msg = document.getElementById('login-msg');
+  msg.className = 'msg'; msg.style.display='none';
+  try{
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    closeModal('login-modal');
+    await checkAuthorizationAndOpen(cred.user);
+  }catch(e){
+    msg.textContent = 'Sign in failed: ' + e.message;
+    msg.className = 'msg err';
+  }
+});
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await signOut(auth);
+  closeModal('upload-modal');
+});
+document.getElementById('unauthorized-logout-btn').addEventListener('click', async () => {
+  await signOut(auth);
+  closeModal('unauthorized-modal');
+});
+
+// ---- xlsx upload + parse (mirrors scripts/seed-menu-data.js logic) ----
+function cleanCell(v){
+  let s = String(v).trim();
+  s = s.replace(/\s{2,}/g, ' / ');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+function excelSerialToIso(serial){
+  // xlsx date system: day 0 = 1899-12-30
+  const ms = Math.round((serial - 25569) * 86400 * 1000);
+  return new Date(ms).toISOString().slice(0,10);
+}
+
+function parseSheet(ws, XLSXref){
+  const range = XLSXref.utils.decode_range(ws['!ref']);
+  const dateCols = {}; // col(0-based) -> iso
+  const menuNoByDate = {};
+  for(let c = range.s.c; c <= range.e.c; c++){
+    const cell = ws[XLSXref.utils.encode_cell({r:1, c})]; // row 2 (0-indexed row 1)
+    if(cell && cell.t === 'n' && cell.w !== undefined){
+      const iso = excelSerialToIso(cell.v);
+      if(!isNaN(new Date(iso).getTime())){
+        dateCols[c] = iso;
+        const menuCell = ws[XLSXref.utils.encode_cell({r:2, c})];
+        if(menuCell && menuCell.v != null && menuCell.v !== '') menuNoByDate[iso] = cleanCell(menuCell.v);
+      }
+    }
+  }
+  let maxRow = range.e.r;
+  const rowsOut = [];
+  let curCat = null, curStation = null;
+  for(let r = 3; r <= maxRow; r++){
+    const aCell = ws[XLSXref.utils.encode_cell({r, c:0})];
+    const bCell = ws[XLSXref.utils.encode_cell({r, c:1})];
+    if(aCell && aCell.v != null && aCell.v !== '') curCat = cleanCell(aCell.v);
+    if(bCell && bCell.v != null && bCell.v !== '') curStation = cleanCell(bCell.v);
+    const values = {};
+    let any = false;
+    for(const [c, iso] of Object.entries(dateCols)){
+      const cell = ws[XLSXref.utils.encode_cell({r, c:Number(c)})];
+      if(cell && cell.v != null && cell.v !== ''){
+        values[iso] = cleanCell(cell.v);
+        any = true;
+      }
+    }
+    if(any) rowsOut.push({ category: curCat, station: curStation, values });
+  }
+  const dates = Object.values(dateCols).sort().filter((v,i,arr)=>arr.indexOf(v)===i);
+  return { dates: dates.map(d => ({ date: d, menuNo: menuNoByDate[d] || '' })), rows: rowsOut };
+}
+
+const SHEET_TO_MEAL = { 'BREAKFAST': 'breakfast', 'LUNCH A3 template': 'lunch', 'Dinner A3 template': 'dinner' };
+
+document.getElementById('upload-submit').addEventListener('click', async () => {
+  const fileInput = document.getElementById('menu-file');
+  const msg = document.getElementById('upload-msg');
+  msg.className = 'msg'; msg.style.display='none';
+  if(!fileInput.files.length){
+    msg.textContent = 'Please choose a file first.'; msg.className='msg err'; return;
+  }
+  const btn = document.getElementById('upload-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try{
+    const buf = await fileInput.files[0].arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array', cellDates: false });
+    const result = {};
+    for(const [sheetName, mealKey] of Object.entries(SHEET_TO_MEAL)){
+      const ws = wb.Sheets[sheetName];
+      if(!ws) continue;
+      result[mealKey] = parseSheet(ws, XLSX);
+    }
+    if(!Object.keys(result).length) throw new Error('No matching sheets found (expected BREAKFAST / LUNCH A3 template / Dinner A3 template)');
+    for(const mealKey of Object.keys(result)){
+      await setDoc(doc(db,'menu',mealKey), result[mealKey]);
+    }
+    msg.textContent = 'Menu updated successfully.'; msg.className = 'msg ok';
+    MENU = {};
+    await loadMenu();
+  }catch(e){
+    console.error(e);
+    msg.textContent = 'Upload failed: ' + e.message; msg.className = 'msg err';
+  }finally{
+    btn.disabled = false; btn.textContent = 'Save New Menu';
+  }
+});
+
+onAuthStateChanged(auth, user => {
+  // no persistent UI change needed on this page besides gating the edit action
+});
+</script>
+</body>
+</html>
