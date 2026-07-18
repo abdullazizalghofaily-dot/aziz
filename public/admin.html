@@ -60,8 +60,8 @@
   --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
   --sh-lg:-16px 0 40px rgba(30,42,34,.16)
 }
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s;overflow-x:hidden}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
 h1{font-size:1rem;font-weight:600}
 h1 .i-accent{color:var(--accent)}
 h1 .ziz{color:var(--accent2);font-weight:700}
@@ -122,6 +122,10 @@ td.actions{display:flex;gap:6px;justify-content:flex-end}
 #status-msg{position:fixed;bottom:20px;right:20px;padding:10px 18px;border-radius:8px;font-size:.8rem;font-weight:600;box-shadow:0 8px 24px rgba(30,42,34,.16);display:none;z-index:2000}
 #status-msg.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 #status-msg.err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+@media(max-width:640px){
+  header{justify-content:center;text-align:center}
+  header>div{justify-content:center}
+}
 </style>
 </head>
 <body>

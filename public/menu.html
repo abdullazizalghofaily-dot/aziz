@@ -64,7 +64,7 @@
   --olive:#3a4025;--olive-text:#bcc39c;--olive-text-active:#dcec8e;
   --sh-lg:-16px 0 40px rgba(30,42,34,.16)
 }
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s;overflow-x:hidden}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:22px 24px;position:sticky;top:0;z-index:100}
 .header-row{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 .header-left{display:flex;align-items:center;gap:12px}
@@ -133,6 +133,9 @@ main{max-width:1000px;margin:0 auto;padding:26px 16px 60px}
 @media(max-width:640px){
   .station-row{flex-direction:column;gap:2px}
   .station-label{width:auto}
+  .header-row{justify-content:center;text-align:center}
+  .header-links{justify-content:center}
+  .date-bar{justify-content:center}
 }
 </style>
 </head>
