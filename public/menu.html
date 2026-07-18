@@ -79,8 +79,13 @@ h1{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
 main{max-width:1000px;margin:0 auto;padding:26px 16px 60px}
 .date-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:26px}
 .date-bar label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-family:var(--mono)}
-#date-select{padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none;cursor:pointer}
+#date-select,#category-select{padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:.82rem;outline:none;cursor:pointer}
 .menu-no-tag{font-family:var(--mono);font-size:.68rem;color:var(--accent2);font-weight:600;padding:4px 10px;border:1px solid var(--border);border-radius:6px}
+.field-group{display:flex;align-items:center;gap:8px}
+.meal-tabs{display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px}
+.meal-tab{padding:7px 14px;border:none;border-radius:6px;background:none;color:var(--text2);font-family:var(--font);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
+.meal-tab:hover{color:var(--accent)}
+.meal-tab.active{background:var(--accent);color:#fff}
 .meal-section{margin-bottom:34px}
 .meal-title{font-size:1rem;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .cat-block{border:1px solid var(--border-light);border-radius:8px;margin-bottom:12px;overflow:hidden}
@@ -136,8 +141,18 @@ main{max-width:1000px;margin:0 auto;padding:26px 16px 60px}
 </header>
 <main>
   <div class="date-bar">
-    <label for="date-select">Date</label>
-    <select id="date-select"></select>
+    <div class="field-group">
+      <label for="date-select">Date</label>
+      <select id="date-select"></select>
+    </div>
+    <div class="field-group">
+      <label>Meal</label>
+      <div class="meal-tabs" id="meal-tabs"></div>
+    </div>
+    <div class="field-group">
+      <label for="category-select">Section</label>
+      <select id="category-select"></select>
+    </div>
     <span class="menu-no-tag" id="menu-no-tag"></span>
   </div>
   <div id="menu-content"></div>
@@ -211,6 +226,9 @@ const MEALS = [
 
 let MENU = {}; // key -> {dates:[{date,menuNo}], rows:[{category,station,values}]}
 let ALL_DATES = []; // union of dates across meals, sorted
+let currentDate = null;
+let currentMeal = 'breakfast';
+let currentCategory = 'ALL';
 
 async function loadMenu(){
   const content = document.getElementById('menu-content');
@@ -229,10 +247,16 @@ async function loadMenu(){
   if(!ALL_DATES.length){
     content.innerHTML = '<div class="empty-state"><div class="empty-icon">🗓️</div><h3>No menu has been uploaded yet</h3></div>';
     document.getElementById('date-select').innerHTML='';
+    document.getElementById('meal-tabs').innerHTML='';
+    document.getElementById('category-select').innerHTML='';
     return;
   }
   populateDateSelect();
-  renderDate(defaultDate());
+  populateMealTabs();
+  currentDate = defaultDate();
+  document.getElementById('date-select').value = currentDate;
+  populateCategorySelect();
+  renderView();
 }
 
 function defaultDate(){
@@ -250,7 +274,46 @@ function fmtDateLabel(iso){
 function populateDateSelect(){
   const sel = document.getElementById('date-select');
   sel.innerHTML = ALL_DATES.map(d => `<option value="${d}">${fmtDateLabel(d)}</option>`).join('');
-  sel.addEventListener('change', () => renderDate(sel.value));
+  sel.addEventListener('change', () => {
+    currentDate = sel.value;
+    populateCategorySelect();
+    renderView();
+  });
+}
+
+function populateMealTabs(){
+  const wrap = document.getElementById('meal-tabs');
+  wrap.innerHTML = MEALS.map(m => `<button type="button" class="meal-tab${m.key===currentMeal?' active':''}" data-meal="${m.key}">${m.label}</button>`).join('');
+  wrap.querySelectorAll('.meal-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentMeal = btn.dataset.meal;
+      currentCategory = 'ALL';
+      wrap.querySelectorAll('.meal-tab').forEach(b => b.classList.toggle('active', b===btn));
+      populateCategorySelect();
+      renderView();
+    });
+  });
+}
+
+function categoriesFor(mealKey, dateIso){
+  const cats = [];
+  (MENU[mealKey].rows||[]).forEach(r => {
+    if(r.values && r.values[dateIso]){
+      const cat = r.category || '—';
+      if(!cats.includes(cat)) cats.push(cat);
+    }
+  });
+  return cats;
+}
+
+function populateCategorySelect(){
+  const sel = document.getElementById('category-select');
+  const cats = categoriesFor(currentMeal, currentDate);
+  const options = ['<option value="ALL">All Sections</option>', ...cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`)];
+  sel.innerHTML = options.join('');
+  if(currentCategory !== 'ALL' && !cats.includes(currentCategory)) currentCategory = 'ALL';
+  sel.value = currentCategory;
+  sel.onchange = () => { currentCategory = sel.value; renderView(); };
 }
 
 function menuNoFor(mealKey, dateIso){
@@ -260,39 +323,37 @@ function menuNoFor(mealKey, dateIso){
 
 function esc(t){return t?String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
 
-function renderDate(dateIso){
-  document.getElementById('date-select').value = dateIso;
-  const tags = MEALS.map(m => menuNoFor(m.key, dateIso)).filter(Boolean);
-  document.getElementById('menu-no-tag').textContent = tags.length ? tags[0] : '';
+function renderView(){
+  document.getElementById('menu-no-tag').textContent = menuNoFor(currentMeal, currentDate);
 
   const content = document.getElementById('menu-content');
-  let html = '';
-  for(const meal of MEALS){
-    const rows = (MENU[meal.key].rows||[]).filter(r => r.values && r.values[dateIso]);
-    html += `<div class="meal-section"><div class="meal-title">${meal.label}</div>`;
-    if(!rows.length){
-      html += `<div class="empty-state" style="padding:20px"><span style="font-size:.8rem">No ${meal.key} menu for this date</span></div>`;
-    } else {
-      const cats = [];
-      const byCat = new Map();
-      rows.forEach(r => {
-        const cat = r.category || '—';
-        if(!byCat.has(cat)){ byCat.set(cat, []); cats.push(cat); }
-        byCat.get(cat).push(r);
+  const meal = MEALS.find(m => m.key === currentMeal);
+  let rows = (MENU[currentMeal].rows||[]).filter(r => r.values && r.values[currentDate]);
+  if(currentCategory !== 'ALL') rows = rows.filter(r => (r.category || '—') === currentCategory);
+
+  let html = `<div class="meal-section"><div class="meal-title">${meal.label}</div>`;
+  if(!rows.length){
+    html += `<div class="empty-state" style="padding:20px"><span style="font-size:.8rem">No ${currentMeal} menu for this selection</span></div>`;
+  } else {
+    const cats = [];
+    const byCat = new Map();
+    rows.forEach(r => {
+      const cat = r.category || '—';
+      if(!byCat.has(cat)){ byCat.set(cat, []); cats.push(cat); }
+      byCat.get(cat).push(r);
+    });
+    cats.forEach(cat => {
+      html += `<div class="cat-block"><div class="cat-header">${esc(cat)}</div>`;
+      let lastStation = null;
+      byCat.get(cat).forEach(r => {
+        const showStation = r.station && r.station !== lastStation;
+        lastStation = r.station || lastStation;
+        html += `<div class="station-row"><span class="station-label">${showStation?esc(r.station):''}</span><span class="dish-name">${esc(r.values[currentDate])}</span></div>`;
       });
-      cats.forEach(cat => {
-        html += `<div class="cat-block"><div class="cat-header">${esc(cat)}</div>`;
-        let lastStation = null;
-        byCat.get(cat).forEach(r => {
-          const showStation = r.station && r.station !== lastStation;
-          lastStation = r.station || lastStation;
-          html += `<div class="station-row"><span class="station-label">${showStation?esc(r.station):''}</span><span class="dish-name">${esc(r.values[dateIso])}</span></div>`;
-        });
-        html += `</div>`;
-      });
-    }
-    html += `</div>`;
+      html += `</div>`;
+    });
   }
+  html += `</div>`;
   content.innerHTML = html;
 }
 
