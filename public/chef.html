@@ -68,8 +68,9 @@ h1 .ziz{color:var(--accent2);font-weight:700}
 button{font-family:var(--font);cursor:pointer}
 .btn{padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text2);font-size:.78rem;font-weight:600}
 .btn:hover{border-color:var(--accent);color:var(--accent)}
-#theme-toggle{position:fixed;top:16px;right:16px;z-index:500;width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+#theme-toggle{width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
 #theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+#theme-toggle.floating{position:fixed;top:16px;right:16px;z-index:500}
 .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn-primary:hover{background:var(--accent2);border-color:var(--accent2);color:#fff}
 .btn-danger{background:none;border-color:var(--red-border);color:var(--red)}
@@ -128,7 +129,7 @@ tr:last-child td{border-bottom:none}
 </head>
 <body>
 
-<button id="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
+<button id="theme-toggle" class="floating" type="button" aria-label="Toggle dark mode"></button>
 
 <div id="auth-screen">
   <h2>👨‍🍳 Chef Portal</h2>
@@ -171,6 +172,7 @@ tr:last-child td{border-bottom:none}
   <header>
     <h1>nutr<span class="i-accent">i</span><span class="ziz">ziz</span> · Chef Portal</h1>
     <div style="display:flex;gap:10px;align-items:center">
+      <span id="theme-toggle-slot"></span>
       <span id="user-name" style="font-size:.78rem;color:var(--muted)"></span>
       <a class="btn" href="./index.html">View Site</a>
       <button class="btn" id="logout-btn">Sign Out</button>
@@ -616,10 +618,22 @@ document.getElementById('table-body').addEventListener('click', async (e)=>{
   }
 });
 
+function placeThemeToggle(inApp){
+  const btn = document.getElementById('theme-toggle');
+  if(inApp){
+    document.getElementById('theme-toggle-slot').appendChild(btn);
+    btn.classList.remove('floating');
+  } else {
+    document.body.insertBefore(btn, document.body.firstChild);
+    btn.classList.add('floating');
+  }
+}
+
 function showScreen(id){
   ['auth-screen','pending-screen','rejected-screen','app-screen'].forEach(s=>{
     document.getElementById(s).style.display = s===id ? 'block' : 'none';
   });
+  placeThemeToggle(id==='app-screen');
 }
 
 onAuthStateChanged(auth, async (user)=>{
