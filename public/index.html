@@ -229,16 +229,29 @@ async function loadData(){
     DATA=cachedParsed.items;indexData();render(true);return;
   }
   grid.innerHTML='<div class="empty"><div class="empty-icon">⏳</div><h3>Loading database…</h3></div>';
+  const RETRY_DELAYS=[500,1500];
+  let snap;
+  for(let attempt=0;;attempt++){
+    try{
+      snap=await getDocs(collection(db,'products'));
+      break;
+    }catch(e){
+      console.error(`Failed to load products (attempt ${attempt+1})`,e);
+      if(attempt>=RETRY_DELAYS.length){
+        grid.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load database</h3><p>Check your Firebase configuration and connection</p></div>';
+        return;
+      }
+      await new Promise(r=>setTimeout(r,RETRY_DELAYS[attempt]));
+    }
+  }
+  DATA=snap.docs.map(d=>({id:d.id,...d.data()}));
+  indexData();
   try{
-    const [snap,metaSnap]=await Promise.all([getDocs(collection(db,'products')),getDoc(doc(db,'meta','catalog'))]);
-    DATA=snap.docs.map(d=>({id:d.id,...d.data()}));
-    indexData();
+    const metaSnap=await getDoc(doc(db,'meta','catalog'));
     const version=metaSnap.exists()?metaSnap.data().updatedAt?.toMillis?.()??null:null;
     localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),version,items:DATA}));
   }catch(e){
-    console.error('Failed to load products from Firestore',e);
-    grid.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><h3>Could not load database</h3><p>Check your Firebase configuration and connection</p></div>';
-    return;
+    console.error('Failed to fetch catalog version, skipping cache write',e);
   }
   render(true);
 }
