@@ -255,6 +255,17 @@ async function bumpCatalogVersion(){
   catch(e){ console.error('Failed to bump catalog version', e); }
 }
 
+const NUM_SHARDS = 20;
+async function regenerateSnapshot(items){
+  const shards = Array.from({length:NUM_SHARDS},()=>[]);
+  items.forEach((item,i)=>shards[i%NUM_SHARDS].push(item));
+  try{
+    await Promise.all(shards.map((chunk,i)=>setDoc(doc(db,'catalogSnapshot','shard_'+i), {items:chunk})));
+  }catch(e){
+    console.error('Failed to regenerate catalog snapshot', e);
+  }
+}
+
 const ALLERGENS = ['Gluten','Tree nuts','Peanuts','Eggs','Milk','Fish','Crustaceans','Molluscs','Celery','Mustard','Sesame','Soya','Sulphites','Lupin'];
 const PAGE = 30;
 
@@ -568,6 +579,7 @@ async function saveProduct(){
     showStatus('Saved successfully');
     closeModal();
     await loadData();
+    await regenerateSnapshot(DATA);
   }catch(e){
     console.error(e);
     showStatus('Save failed: '+e.message, false);
@@ -593,6 +605,7 @@ document.getElementById('table-body').addEventListener('click', async (e)=>{
       await bumpCatalogVersion();
       showStatus('Deleted');
       await loadData();
+      await regenerateSnapshot(DATA);
     }catch(err){
       showStatus('Delete failed: '+err.message, false);
     }

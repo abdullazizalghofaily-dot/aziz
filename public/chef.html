@@ -279,6 +279,19 @@ async function bumpCatalogVersion(){
   catch(e){ console.error('Failed to bump catalog version', e); }
 }
 
+const NUM_SHARDS = 20;
+async function regenerateSnapshot(){
+  try{
+    const snap = await getDocs(collection(db,'products'));
+    const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const shards = Array.from({length:NUM_SHARDS},()=>[]);
+    items.forEach((item,i)=>shards[i%NUM_SHARDS].push(item));
+    await Promise.all(shards.map((chunk,i)=>setDoc(doc(db,'catalogSnapshot','shard_'+i), {items:chunk})));
+  }catch(e){
+    console.error('Failed to regenerate catalog snapshot', e);
+  }
+}
+
 const ALLERGENS = ['Gluten','Tree nuts','Peanuts','Eggs','Milk','Fish','Crustaceans','Molluscs','Celery','Mustard','Sesame','Soya','Sulphites','Lupin'];
 
 let MY_DATA = [];
@@ -297,8 +310,8 @@ function scoreM(name,q){
 let NAME_INDEX=new Map();
 async function loadAllProductsForSearch(){
   if(ALL_PRODUCTS.length) return;
-  const snap=await getDocs(collection(db,'products'));
-  ALL_PRODUCTS=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const shardSnaps=await Promise.all(Array.from({length:NUM_SHARDS},(_,i)=>getDoc(doc(db,'catalogSnapshot','shard_'+i))));
+  ALL_PRODUCTS=shardSnaps.flatMap(s=>s.exists()?(s.data().items||[]):[]);
   NAME_INDEX=new Map();
   ALL_PRODUCTS.forEach(rec=>{
     const k=norm(rec.name||'');
@@ -594,6 +607,7 @@ async function saveRecipe(){
     showStatus('Saved successfully');
     closeModal();
     await loadMyData(user.uid);
+    await regenerateSnapshot();
   }catch(e){
     console.error(e);
     showStatus('Save failed: '+e.message, false);
@@ -616,6 +630,7 @@ document.getElementById('table-body').addEventListener('click', async (e)=>{
       await bumpCatalogVersion();
       showStatus('Deleted');
       await loadMyData(auth.currentUser.uid);
+      await regenerateSnapshot();
     }catch(err){
       showStatus('Delete failed: '+err.message, false);
     }

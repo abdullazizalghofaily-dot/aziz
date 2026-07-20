@@ -40,6 +40,11 @@ service cloud.firestore {
       allow write: if isAdmin() || isApprovedChef();
     }
 
+    match /catalogSnapshot/{shardId} {
+      allow read: if true;
+      allow write: if isAdmin() || isApprovedChef();
+    }
+
     match /menu/{mealId} {
       allow read: if true;
       allow write: if isAdmin() || isMenuEditor();

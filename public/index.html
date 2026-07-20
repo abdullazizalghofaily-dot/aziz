@@ -200,11 +200,12 @@ main{max-width:920px;margin:0 auto;padding:26px 14px 60px}
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const NUM_SHARDS = 20;
 const CACHE_KEY = 'neom_products_cache_v2';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const AI={'Gluten':'🌾','Tree nuts':'🌰','Peanuts':'🥜','Eggs':'🥚','Milk':'🥛','Fish':'🐟','Crustaceans':'🦐','Molluscs':'🦑','Celery':'🥬','Mustard':'🌼','Sesame':'🫘','Soya':'🫛','Sulphites':'⚗️','Lupin':'🌿'};
@@ -232,10 +233,10 @@ async function loadData(){
   }
   grid.innerHTML='<div class="empty"><div class="empty-icon">⏳</div><h3>Loading database…</h3></div>';
   const RETRY_DELAYS=[500,1500];
-  let snap;
+  let shardSnaps;
   for(let attempt=0;;attempt++){
     try{
-      snap=await getDocs(collection(db,'products'));
+      shardSnaps=await Promise.all(Array.from({length:NUM_SHARDS},(_,i)=>getDoc(doc(db,'catalogSnapshot','shard_'+i))));
       break;
     }catch(e){
       console.error(`Failed to load products (attempt ${attempt+1})`,e);
@@ -246,7 +247,7 @@ async function loadData(){
       await new Promise(r=>setTimeout(r,RETRY_DELAYS[attempt]));
     }
   }
-  DATA=snap.docs.map(d=>({id:d.id,...d.data()}));
+  DATA=shardSnaps.flatMap(s=>s.exists()?(s.data().items||[]):[]);
   indexData();
   try{
     const metaSnap=await getDoc(doc(db,'meta','catalog'));
