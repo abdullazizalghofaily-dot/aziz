@@ -134,10 +134,35 @@ async function main() {
   });
   console.log('Unique dish names:', dishInfo.size);
 
-  function matchSingle(dishName) {
+  // Singularize crudely (soups->soup, salads->salad, sauces->sauce) so a
+  // menu row's category/station can be compared against a recipe name's
+  // trailing descriptor word.
+  function singularize(w) {
+    if (w.length > 3 && w.endsWith('es') && !w.endsWith('ees')) return w.slice(0, -2);
+    if (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) return w.slice(0, -1);
+    return w;
+  }
+  function contextTokensFor(catsSet) {
+    const set = new Set();
+    (catsSet || []).forEach(catStr => {
+      catStr.split('/').forEach(part => tokens(part).forEach(w => set.add(singularize(w))));
+    });
+    return set;
+  }
+
+  // A dish name is often missing the word that its menu section/station
+  // implies (e.g. menu says "CREAM OF CORN" under section "SOUPS", but the
+  // catalog recipe is named "Cream of Corn Soup"). When every word of the
+  // dish name is found inside a candidate's name (a full subset match) AND
+  // the candidate's one extra word matches the row's section/station
+  // (singularized), that's strong independent confirmation — safe to treat
+  // as HIGH confidence even though raw string similarity alone wouldn't
+  // clear the threshold.
+  function matchSingle(dishName, contextTokens) {
     const qNorm = norm(dishName);
     const qNoSpace = collapsedNoSpace(dishName);
     const qTokens = tokens(dishName);
+    const qTokenSet = new Set(qTokens);
 
     // exact match
     if (exactIndex.has(qNorm)) return { idx: exactIndex.get(qNorm), tier: 'HIGH', reason: 'exact' };
@@ -153,6 +178,23 @@ async function main() {
       }
     }
     if (poolSet.size === 0) return null;
+
+    // context-confirmed subset match: check first, prefer the most specific
+    // (fewest extra words) candidate among those confirmed by context.
+    if (contextTokens && contextTokens.size) {
+      let ctxBest = null, ctxBestExtra = Infinity;
+      for (const idx of poolSet) {
+        const cTokens = itemTokens[idx];
+        let subset = true;
+        for (const t of qTokenSet) if (!cTokens.has(t)) { subset = false; break; }
+        if (!subset) continue;
+        const extra = [...cTokens].filter(t => !qTokenSet.has(t));
+        if (extra.length === 0) continue; // that would have been an exact match already
+        const extraConfirmed = extra.some(t => contextTokens.has(singularize(t)));
+        if (extraConfirmed && extra.length < ctxBestExtra) { ctxBestExtra = extra.length; ctxBest = idx; }
+      }
+      if (ctxBest !== null) return { idx: ctxBest, tier: 'HIGH', reason: 'context-subset' };
+    }
 
     let best = null, bestScore = -1;
     for (const idx of poolSet) {
@@ -183,14 +225,14 @@ async function main() {
   // confidence to a DIFFERENT item than the whole-string match — that's
   // strong evidence the cell really does list separate items — and then
   // union their codes so nothing is under-reported.
-  function findBestMatch(dishName) {
-    const whole = matchSingle(dishName);
+  function findBestMatch(dishName, contextTokens) {
+    const whole = matchSingle(dishName, contextTokens);
     const fragments = dishName
       .split(/\s*\/\s*|\s+\band\b\s+/i)
       .map(s => s.replace(/^[\s,]+|[\s,]+$/g, ''))
       .filter(s => s.length > 1);
     if (fragments.length >= 2) {
-      const fragMatches = fragments.map(f => matchSingle(f));
+      const fragMatches = fragments.map(f => matchSingle(f, contextTokens));
       if (fragMatches.every(m => m && m.tier === 'HIGH')) {
         const distinctIdxs = [...new Set(fragMatches.map(m => m.idx))];
         if (distinctIdxs.length >= 2) {
@@ -203,8 +245,9 @@ async function main() {
 
   const results = new Map(); // dishName -> {tier, rec, codes}
   let high = 0, medium = 0, none = 0;
-  for (const [name] of dishInfo) {
-    const m = findBestMatch(name);
+  for (const [name, info] of dishInfo) {
+    const contextTokens = contextTokensFor(info.cats);
+    const m = findBestMatch(name, contextTokens);
     if (!m) { none++; results.set(name, { tier: 'NONE' }); continue; }
     if (m.multi) {
       const codesSet = new Set();
