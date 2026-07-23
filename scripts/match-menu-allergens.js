@@ -80,9 +80,20 @@ async function fetchAllPaged(pageSize) {
   return items;
 }
 
+const CACHE_PATH = '/tmp/claude-0/-home-user-aziz/8e941f65-efbc-56d6-94db-b8f8de39ea42/scratchpad/products-cache.json';
+
 async function main() {
-  console.log('Loading full products collection (paginated)...');
-  const items = await fetchAllPaged(300);
+  const fsSync = require('fs');
+  let items;
+  if (fsSync.existsSync(CACHE_PATH)) {
+    console.log('Using local products cache:', CACHE_PATH);
+    items = JSON.parse(fsSync.readFileSync(CACHE_PATH, 'utf8'));
+  } else {
+    console.log('Loading full products collection (paginated)...');
+    items = await fetchAllPaged(300);
+    fsSync.writeFileSync(CACHE_PATH, JSON.stringify(items));
+    console.log('Cached to', CACHE_PATH);
+  }
   console.log(`Loaded ${items.length} items.`);
 
   // inverted token index for candidate blocking
