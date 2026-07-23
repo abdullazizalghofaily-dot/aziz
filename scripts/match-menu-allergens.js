@@ -134,7 +134,7 @@ async function main() {
   });
   console.log('Unique dish names:', dishInfo.size);
 
-  function findBestMatch(dishName) {
+  function matchSingle(dishName) {
     const qNorm = norm(dishName);
     const qNoSpace = collapsedNoSpace(dishName);
     const qTokens = tokens(dishName);
@@ -174,11 +174,46 @@ async function main() {
     return { idx: best, tier, reason: `score=${bestScore.toFixed(2)}` };
   }
 
+  // Some menu cells list multiple distinct items separated by "/" or the
+  // standalone word "AND" (e.g. two bread choices, several condiment
+  // options). Splitting blindly would wrongly fragment compound dish names
+  // that just happen to contain "/" or "and" (e.g. "Maple and Apple
+  // Muffin" is one flavor, not two items). So: only prefer the split
+  // interpretation when EVERY fragment independently resolves with HIGH
+  // confidence to a DIFFERENT item than the whole-string match — that's
+  // strong evidence the cell really does list separate items — and then
+  // union their codes so nothing is under-reported.
+  function findBestMatch(dishName) {
+    const whole = matchSingle(dishName);
+    const fragments = dishName
+      .split(/\s*\/\s*|\s+\band\b\s+/i)
+      .map(s => s.replace(/^[\s,]+|[\s,]+$/g, ''))
+      .filter(s => s.length > 1);
+    if (fragments.length >= 2) {
+      const fragMatches = fragments.map(f => matchSingle(f));
+      if (fragMatches.every(m => m && m.tier === 'HIGH')) {
+        const distinctIdxs = [...new Set(fragMatches.map(m => m.idx))];
+        if (distinctIdxs.length >= 2) {
+          return { multi: true, idxs: distinctIdxs, tier: 'HIGH', reason: 'split-multi' };
+        }
+      }
+    }
+    return whole;
+  }
+
   const results = new Map(); // dishName -> {tier, rec, codes}
   let high = 0, medium = 0, none = 0;
   for (const [name] of dishInfo) {
     const m = findBestMatch(name);
     if (!m) { none++; results.set(name, { tier: 'NONE' }); continue; }
+    if (m.multi) {
+      const codesSet = new Set();
+      m.idxs.forEach(idx => codesFor(items[idx]).forEach(c => codesSet.add(c)));
+      const codes = CODE_ORDER.map(a => CODE[a]).filter(c => codesSet.has(c));
+      high++;
+      results.set(name, { tier: 'HIGH', rec: { name: m.idxs.map(i => items[i].name).join(' + ') }, codes, reason: 'split-multi' });
+      continue;
+    }
     const rec = items[m.idx];
     const codes = codesFor(rec);
     if (m.tier === 'HIGH') high++; else medium++;
