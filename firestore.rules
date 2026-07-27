@@ -14,6 +14,10 @@ service cloud.firestore {
       return request.auth != null &&
         exists(/databases/$(database)/documents/menuEditors/$(request.auth.uid));
     }
+    function isWarehouseStaff() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/warehouseStaff/$(request.auth.uid));
+    }
 
     match /products/{productId} {
       allow read: if true;
@@ -53,6 +57,23 @@ service cloud.firestore {
     match /menuEditors/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow write: if false;
+    }
+
+    match /warehouseStaff/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow write: if false;
+    }
+
+    match /suppliers/{supplierId} {
+      allow read, write: if isAdmin() || isWarehouseStaff();
+    }
+
+    match /purchaseOrders/{orderId} {
+      allow read, write: if isAdmin() || isWarehouseStaff();
+    }
+
+    match /inventory/{productId} {
+      allow read, write: if isAdmin() || isWarehouseStaff();
     }
   }
 }
