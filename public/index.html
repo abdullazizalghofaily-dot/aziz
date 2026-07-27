@@ -67,14 +67,15 @@
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s;overflow-x:hidden}
 ::selection{background:#c8703a33}
 header{background:var(--surface);border-bottom:1px solid var(--border);padding:22px 24px 0;text-align:center;position:sticky;top:0;z-index:100}
-.header-row{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px}
-.header-links{display:flex;flex-wrap:wrap;gap:10px;font-size:.72rem;font-weight:600}
-.menu-link,.chef-login-link,.admin-login-link,.procurement-link{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);text-decoration:none;transition:all .15s}
+.header-row{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:22px;gap:12px}
+.header-left{display:flex;justify-self:start}
+.header-links{display:flex;flex-wrap:wrap;gap:10px;font-size:.72rem;font-weight:600;justify-self:end}
+.menu-link,.chef-login-link,.admin-login-link,.procurement-link{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);text-decoration:none;transition:all .15s;font-size:.72rem;font-weight:600}
 .menu-link:hover,.chef-login-link:hover,.admin-login-link:hover,.procurement-link:hover{border-color:var(--accent);color:var(--accent)}
 #theme-toggle{width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
 #theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
 .header-top{display:flex;align-items:center;justify-content:center;gap:10px}
-h1{font-size:1.2rem;font-weight:600;letter-spacing:-.02em}
+h1{font-size:1.7rem;font-weight:700;letter-spacing:-.02em}
 h1 .i-accent{color:var(--accent)}
 h1 .ziz{color:var(--accent2);font-weight:700}
 .tagline{font-size:.78rem;color:var(--muted);margin:14px 0}
@@ -149,16 +150,19 @@ main{max-width:920px;margin:0 auto;padding:26px 14px 60px}
 @media(max-width:640px){
   .grid{grid-template-columns:1fr}.nut-grid{grid-template-columns:repeat(2,1fr)}
   .nut-cell:nth-child(2){border-right:none}
-  .header-row{flex-direction:column;justify-content:center}
-  .header-links{justify-content:center}
+  .header-row{grid-template-columns:1fr;justify-items:center}
+  .header-left{justify-self:center}
+  .header-links{justify-self:center;justify-content:center}
 }
 </style>
 </head>
 <body>
 <header>
   <div class="header-row">
-    <div class="header-top">
+    <div class="header-left">
       <a class="procurement-link" href="./procurement.html">📦 Procurement</a>
+    </div>
+    <div class="header-top">
       <h1>nutr<span class="i-accent">i</span><span class="ziz">ziz</span></h1>
     </div>
     <div class="header-links">
