@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nutriziz — Reports</title>
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<script>
+(function(){
+  var saved = localStorage.getItem('nutriziz-theme');
+  if(saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#eeece3;--surface:#f6f5ef;--surface2:#e7e5da;
+  --border:#c9cfbd;--border-light:#d6dac8;
+  --accent:#2f6f4e;--accent2:#c8703a;
+  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;--faint:#a8a296;
+  --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
+  --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
+  --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --font:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --sh-lg:-16px 0 40px rgba(30,42,34,.16)
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11160e;--surface:#171d13;--surface2:#1b2216;
+    --border:#2c3524;--border-light:#232b1c;
+    --accent:#6fbf8f;--accent2:#e2955c;
+    --text:#eaf0e4;--text2:#b7c0ac;--muted:#818a72;--faint:#5b6350;
+    --red:#e8837e;--red-bg:#2a1a19;--red-border:#4a2b29;
+    --amber:#e6ac4c;--amber-bg:#2a2417;--amber-border:#4a3e28;
+    --green:#5fd097;--green-bg:#182920;--green-border:#274a37;
+    --sh-lg:-16px 0 40px rgba(0,0,0,.45)
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11160e;--surface:#171d13;--surface2:#1b2216;
+  --border:#2c3524;--border-light:#232b1c;
+  --accent:#6fbf8f;--accent2:#e2955c;
+  --text:#eaf0e4;--text2:#b7c0ac;--muted:#818a72;--faint:#5b6350;
+  --red:#e8837e;--red-bg:#2a1a19;--red-border:#4a2b29;
+  --amber:#e6ac4c;--amber-bg:#2a2417;--amber-border:#4a3e28;
+  --green:#5fd097;--green-bg:#182920;--green-border:#274a37;
+  --sh-lg:-16px 0 40px rgba(0,0,0,.45)
+}
+:root[data-theme="light"]{
+  --bg:#eeece3;--surface:#f6f5ef;--surface2:#e7e5da;
+  --border:#c9cfbd;--border-light:#d6dac8;
+  --accent:#2f6f4e;--accent2:#c8703a;
+  --text:#1e2a22;--text2:#4a5647;--muted:#7c8577;--faint:#a8a296;
+  --red:#c94040;--red-bg:#fdf0f0;--red-border:#f0c0c0;
+  --amber:#c47a00;--amber-bg:#fdf6e3;--amber-border:#f0dca0;
+  --green:#1e8a54;--green-bg:#edfaf3;--green-border:#b0e8cc;
+  --sh-lg:-16px 0 40px rgba(30,42,34,.16)
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .2s,color .2s;overflow-x:hidden}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;position:sticky;top:0;z-index:100}
+h1{font-size:1rem;font-weight:600}
+h1 .i-accent{color:var(--accent)}
+h1 .ziz{color:var(--accent2);font-weight:700}
+button{font-family:var(--font);cursor:pointer}
+.btn{padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text2);font-size:.78rem;font-weight:600}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+#theme-toggle{width:30px;height:30px;flex-shrink:0;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+#theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+#theme-toggle.floating{position:fixed;top:16px;right:16px;z-index:500}
+main{max-width:980px;margin:0 auto;padding:24px 24px 60px}
+#auth-screen{max-width:380px;margin:80px auto;background:var(--surface);border:1px solid var(--border-light);border-radius:12px;padding:32px}
+#auth-screen h2{font-size:1rem;font-weight:600;margin-bottom:20px;text-align:center}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.62rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px}
+.field input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;font-family:var(--font);font-size:.8rem;background:var(--surface2);color:var(--text)}
+.auth-error{color:var(--red);font-size:.78rem;margin-top:8px;text-align:center;display:none}
+#denied-screen{max-width:420px;margin:100px auto;background:var(--surface);border:1px solid var(--border-light);border-radius:12px;padding:36px;text-align:center}
+#denied-screen .icon{font-size:38px;margin-bottom:10px}
+.crumbs{font-size:.72rem;color:var(--muted);margin-bottom:16px}
+.crumbs a{color:var(--muted);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border-light);border-radius:10px;padding:16px 18px}
+.stat-val{font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--accent)}
+.stat-lbl{font-size:.68rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.03em}
+.section{background:var(--surface);border:1px solid var(--border-light);border-radius:10px;padding:18px 20px;margin-bottom:20px}
+.section-title{font-size:.85rem;font-weight:700;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;border:1px solid var(--border-light)}
+th,td{text-align:left;padding:10px 12px;font-size:.78rem;border-bottom:1px solid var(--border-light)}
+th{background:var(--surface2);color:var(--text2);font-weight:600;text-transform:uppercase;font-size:.58rem;letter-spacing:.04em;font-family:var(--mono)}
+tr:last-child td{border-bottom:none}
+td.num{font-family:var(--mono);text-align:right}
+.bar-wrap{display:flex;align-items:center;gap:8px}
+.bar-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--accent);border-radius:4px}
+.empty-state{text-align:center;padding:30px 20px;color:var(--muted);font-size:.8rem}
+@media(max-width:640px){
+  header{justify-content:center;text-align:center}
+  header>div{justify-content:center}
+  .stat-row{grid-template-columns:1fr}
+  table{font-size:.7rem}
+}
+</style>
+</head>
+<body>
+
+<button id="theme-toggle" class="floating" type="button" aria-label="Toggle dark mode"></button>
+
+<div id="auth-screen">
+  <h2>📊 Reports</h2>
+  <div class="field"><label>Email</label><input type="email" id="signin-email" autocomplete="username"></div>
+  <div class="field"><label>Password</label><input type="password" id="signin-password" autocomplete="current-password"></div>
+  <button class="btn btn-primary" id="signin-btn" style="width:100%">Sign In</button>
+  <div class="auth-error" id="auth-error"></div>
+</div>
+
+<div id="denied-screen" style="display:none">
+  <div class="icon">🚫</div>
+  <h2>Not Authorized</h2>
+  <p style="margin-top:10px;color:var(--text2);font-size:.85rem">This account doesn't have access to Reports.</p>
+  <button class="btn" id="denied-logout" style="margin-top:18px">Sign Out</button>
+</div>
+
+<div id="app-screen" style="display:none">
+  <header>
+    <h1>nutr<span class="i-accent">i</span><span class="ziz">ziz</span> · Reports</h1>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span id="theme-toggle-slot"></span>
+      <span id="user-email" style="font-size:.78rem;color:var(--muted)"></span>
+      <a class="btn" href="./index.html">View Site</a>
+      <button class="btn" id="logout-btn">Sign Out</button>
+    </div>
+  </header>
+  <main>
+    <div class="crumbs"><a href="./procurement.html">← Procurement</a> &nbsp;·&nbsp; <a href="./purchasing.html">Purchasing</a> &nbsp;·&nbsp; <a href="./warehouse.html">Warehouse</a></div>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-val" id="stat-total-spend">—</div><div class="stat-lbl">Total Spend (received orders)</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-inv-value">—</div><div class="stat-lbl">Current Inventory Value</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-order-count">—</div><div class="stat-lbl">Purchase Orders (excl. cancelled)</div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Spend by Supplier</div>
+      <table><thead><tr><th>Supplier</th><th style="text-align:right">Total Spend</th><th style="width:40%">Share</th></tr></thead><tbody id="supplier-spend-body"></tbody></table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Spend by Month</div>
+      <table><thead><tr><th>Month</th><th style="text-align:right">Total Spend</th></tr></thead><tbody id="month-spend-body"></tbody></table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Inventory Value by Product</div>
+      <table><thead><tr><th>Product</th><th style="text-align:right">Qty on Hand</th><th style="text-align:right">Est. Value</th></tr></thead><tbody id="inv-value-body"></tbody></table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Price Comparison Across Suppliers</div>
+      <p style="font-size:.74rem;color:var(--muted);margin-bottom:10px">Products purchased from more than one supplier, with their most recent price from each.</p>
+      <table><thead><tr><th>Product</th><th>Supplier</th><th style="text-align:right">Last Unit Price</th><th>Last Order Date</th></tr></thead><tbody id="price-compare-body"></tbody></table>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+function esc(t){ return t ? String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+function money(n){ return (n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+document.getElementById('signin-btn').addEventListener('click', async ()=>{
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.style.display = 'none';
+  try{ await signInWithEmailAndPassword(auth, email, password); }
+  catch(e){ errEl.textContent = 'Sign in failed: ' + e.message; errEl.style.display = 'block'; }
+});
+document.getElementById('denied-logout').addEventListener('click', ()=>signOut(auth));
+document.getElementById('logout-btn').addEventListener('click', ()=>signOut(auth));
+
+function placeThemeToggle(inApp){
+  const btn = document.getElementById('theme-toggle');
+  if(inApp){ document.getElementById('theme-toggle-slot').appendChild(btn); btn.classList.remove('floating'); }
+  else { document.body.insertBefore(btn, document.body.firstChild); btn.classList.add('floating'); }
+}
+
+async function loadReports(){
+  const [ordersSnap, invSnap] = await Promise.all([
+    getDocs(collection(db,'purchaseOrders')),
+    getDocs(collection(db,'inventory'))
+  ]);
+  const orders = ordersSnap.docs.map(d=>({id:d.id, ...d.data()})).filter(o=>o.status!=='cancelled');
+  const inventory = invSnap.docs.map(d=>({id:d.id, ...d.data()}));
+
+  const totalSpend = orders.reduce((s,o)=>s+(o.totalCost||0),0);
+  document.getElementById('stat-total-spend').textContent = money(totalSpend);
+  document.getElementById('stat-order-count').textContent = orders.length;
+
+  // Spend by supplier
+  const bySupplier = new Map();
+  orders.forEach(o=>{ bySupplier.set(o.supplierName, (bySupplier.get(o.supplierName)||0) + (o.totalCost||0)); });
+  const supplierRows = [...bySupplier.entries()].sort((a,b)=>b[1]-a[1]);
+  const maxSupplierSpend = supplierRows.length ? supplierRows[0][1] : 0;
+  const supplierBody = document.getElementById('supplier-spend-body');
+  supplierBody.innerHTML = supplierRows.length ? supplierRows.map(([name,total])=>`
+    <tr><td>${esc(name)}</td><td class="num">${money(total)}</td>
+      <td><div class="bar-wrap"><div class="bar-track"><div class="bar-fill" style="width:${maxSupplierSpend?(total/maxSupplierSpend*100):0}%"></div></div></div></td>
+    </tr>`).join('') : '<tr><td colspan="3" class="empty-state">No purchase orders yet.</td></tr>';
+
+  // Spend by month
+  const byMonth = new Map();
+  orders.forEach(o=>{ const m=(o.orderDate||'').slice(0,7)||'Unknown'; byMonth.set(m, (byMonth.get(m)||0) + (o.totalCost||0)); });
+  const monthRows = [...byMonth.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  const monthBody = document.getElementById('month-spend-body');
+  monthBody.innerHTML = monthRows.length ? monthRows.map(([m,total])=>`<tr><td>${esc(m)}</td><td class="num">${money(total)}</td></tr>`).join('')
+    : '<tr><td colspan="2" class="empty-state">No purchase orders yet.</td></tr>';
+
+  // Inventory value
+  let totalInvValue = 0;
+  const invRows = inventory.map(i=>{
+    const qty = (i.batches||[]).reduce((s,b)=>s+(b.quantity||0),0);
+    const value = (i.batches||[]).reduce((s,b)=>s+((b.quantity||0)*(b.unitCost||0)),0);
+    totalInvValue += value;
+    return { name: i.productName, qty, unit: i.unit, value };
+  }).sort((a,b)=>b.value-a.value);
+  document.getElementById('stat-inv-value').textContent = money(totalInvValue);
+  const invBody = document.getElementById('inv-value-body');
+  invBody.innerHTML = invRows.length ? invRows.map(r=>`<tr><td>${esc(r.name)}</td><td class="num">${r.qty} ${esc(r.unit||'')}</td><td class="num">${money(r.value)}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty-state">No inventory items yet.</td></tr>';
+
+  // Price comparison across suppliers
+  const byProduct = new Map(); // productId -> Map(supplierName -> {price, date})
+  orders.forEach(o=>{
+    (o.items||[]).forEach(it=>{
+      if(!byProduct.has(it.productId)) byProduct.set(it.productId, { name: it.productName, suppliers: new Map() });
+      const entry = byProduct.get(it.productId);
+      const existing = entry.suppliers.get(o.supplierName);
+      if(!existing || (o.orderDate||'') > existing.date){
+        entry.suppliers.set(o.supplierName, { price: it.unitPrice, date: o.orderDate });
+      }
+    });
+  });
+  const compareRows = [];
+  byProduct.forEach(entry=>{
+    if(entry.suppliers.size >= 2){
+      entry.suppliers.forEach((v,supplierName)=>{
+        compareRows.push({ name: entry.name, supplierName, price: v.price, date: v.date });
+      });
+    }
+  });
+  compareRows.sort((a,b)=>a.name.localeCompare(b.name));
+  const compareBody = document.getElementById('price-compare-body');
+  compareBody.innerHTML = compareRows.length ? compareRows.map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.supplierName)}</td><td class="num">${money(r.price)}</td><td>${esc(r.date||'—')}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="empty-state">No product has been ordered from more than one supplier yet.</td></tr>';
+}
+
+onAuthStateChanged(auth, async (user)=>{
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('denied-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'none';
+  if(!user){ document.getElementById('auth-screen').style.display = 'block'; placeThemeToggle(false); return; }
+  const [adminSnap, staffSnap] = await Promise.all([
+    getDoc(doc(db,'admins',user.uid)),
+    getDoc(doc(db,'warehouseStaff',user.uid))
+  ]);
+  if(adminSnap.exists() || staffSnap.exists()){
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('user-email').textContent = user.email;
+    placeThemeToggle(true);
+    await loadReports();
+  } else {
+    document.getElementById('denied-screen').style.display = 'block';
+    placeThemeToggle(false);
+  }
+});
+
+function currentTheme(){
+  return document.documentElement.getAttribute('data-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyThemeIcon(){
+  document.getElementById('theme-toggle').textContent = currentTheme()==='dark' ? '☀️' : '🌙';
+}
+document.getElementById('theme-toggle').addEventListener('click', ()=>{
+  const next = currentTheme()==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('nutriziz-theme', next);
+  applyThemeIcon();
+});
+applyThemeIcon();
+</script>
+</body>
+</html>

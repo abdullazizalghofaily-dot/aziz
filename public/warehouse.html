@@ -92,11 +92,11 @@ main{max-width:980px;margin:0 auto;padding:24px 24px 60px}
 .alert-banner.low{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
 .alert-banner.exp{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber)}
 .alert-banner b{display:block;margin-bottom:4px;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;font-family:var(--mono)}
-.section{background:var(--surface);border:1px solid var(--border-light);border-radius:10px;padding:18px 20px}
+.section{background:var(--surface);border:1px solid var(--border-light);border-radius:10px;padding:18px 20px;margin-bottom:20px}
 .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .section-title{font-size:.85rem;font-weight:700}
 table{width:100%;border-collapse:collapse;border:1px solid var(--border-light)}
-th,td{text-align:left;padding:10px 12px;font-size:.78rem;border-bottom:1px solid var(--border-light)}
+th,td{text-align:left;padding:10px 12px;font-size:.78rem;border-bottom:1px solid var(--border-light);vertical-align:top}
 th{background:var(--surface2);color:var(--text2);font-weight:600;text-transform:uppercase;font-size:.58rem;letter-spacing:.04em;font-family:var(--mono)}
 tr:last-child td{border-bottom:none}
 .row-actions-cell{white-space:nowrap;text-align:right}
@@ -104,6 +104,13 @@ tr:last-child td{border-bottom:none}
 .tag{display:inline-block;font-size:.6rem;font-weight:600;padding:2px 7px;border-radius:4px;margin-left:6px;font-family:var(--mono)}
 .tag-low{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 .tag-exp{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.batch-list{margin-top:4px;font-size:.68rem;color:var(--muted)}
+.batch-row{display:flex;gap:6px;padding:1px 0}
+.batch-row.soon{color:var(--amber)}
+.batch-row.expired{color:var(--red);font-weight:600}
+.reorder-card{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:8px;margin-bottom:8px;font-size:.78rem}
+.reorder-card .rc-info b{display:block}
+.reorder-card .rc-info span{font-size:.68rem;color:var(--muted)}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,20,.35);z-index:1000;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
 .modal{background:var(--surface);width:480px;max-width:92vw;max-height:88vh;overflow-y:auto;border-radius:12px;box-shadow:var(--sh-lg);animation:mIn .2s ease}
@@ -160,9 +167,14 @@ tr:last-child td{border-bottom:none}
     </div>
   </header>
   <main>
-    <div class="crumbs"><a href="./procurement.html">← Procurement</a> &nbsp;·&nbsp; <a href="./purchasing.html">Purchasing →</a></div>
+    <div class="crumbs"><a href="./procurement.html">← Procurement</a> &nbsp;·&nbsp; <a href="./purchasing.html">Purchasing</a> &nbsp;·&nbsp; <a href="./reports.html">Reports →</a></div>
 
     <div id="alerts-box"></div>
+
+    <div class="section" id="reorder-section" style="display:none">
+      <div class="section-head"><div class="section-title">🔄 Reorder Suggestions</div></div>
+      <div id="reorder-list"></div>
+    </div>
 
     <div class="section">
       <div class="section-head">
@@ -170,7 +182,7 @@ tr:last-child td{border-bottom:none}
         <button class="btn btn-primary btn-sm" id="add-stock-btn">+ Add Item</button>
       </div>
       <table>
-        <thead><tr><th>Product</th><th>Quantity</th><th>Unit</th><th>Low-stock at</th><th>Expiry</th><th></th></tr></thead>
+        <thead><tr><th>Product</th><th>Quantity &amp; Batches</th><th>Unit</th><th>Low-stock at</th><th>Par level</th><th></th></tr></thead>
         <tbody id="inventory-body"></tbody>
       </table>
     </div>
@@ -187,17 +199,34 @@ tr:last-child td{border-bottom:none}
         <div id="product-search-results" class="ing-search-results"></div>
       </div>
       <div class="field"><label>Selected Product</label><input type="text" id="i-product-name" disabled></div>
+      <div class="grid2" id="new-item-qty-row">
+        <div class="field"><label>Initial Quantity</label><input type="number" step="0.01" min="0" id="i-quantity"></div>
+        <div class="field"><label>Expiry Date (for this batch)</label><input type="date" id="i-expiry"></div>
+      </div>
       <div class="grid2">
-        <div class="field"><label>Quantity on Hand</label><input type="number" step="0.01" min="0" id="i-quantity"></div>
         <div class="field"><label>Unit</label><input type="text" id="i-unit" placeholder="kg, pcs, box..."></div>
-      </div>
-      <div class="grid2">
         <div class="field"><label>Low-Stock Threshold</label><input type="number" step="0.01" min="0" id="i-threshold"></div>
-        <div class="field"><label>Expiry Date</label><input type="date" id="i-expiry"></div>
       </div>
+      <div class="field"><label>Par Level (target restock quantity)</label><input type="number" step="0.01" min="0" id="i-par"></div>
       <div class="modal-footer">
         <button class="btn" onclick="closeModal('stock-modal')">Cancel</button>
         <button class="btn btn-primary" id="save-stock-btn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="use-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Use / Remove Stock</div><button class="btn" onclick="closeModal('use-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Product</label><input type="text" id="u-product-name" disabled></div>
+      <div class="field"><label>Quantity to Remove</label><input type="number" step="0.01" min="0" id="u-quantity"></div>
+      <div class="field"><label>Reason</label><input type="text" id="u-reason" placeholder="e.g. kitchen use, wastage, stock count"></div>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:4px">Deducted from the earliest-expiring batch first (FEFO).</p>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('use-modal')">Cancel</button>
+        <button class="btn btn-primary" id="save-use-btn">Remove</button>
       </div>
     </div>
   </div>
@@ -269,47 +298,79 @@ function daysUntil(dateStr){
   return Math.round((d - today) / 86400000);
 }
 
+function batchesOf(item){ return item.batches || []; }
+function totalQty(item){ return batchesOf(item).reduce((s,b)=>s + (b.quantity||0), 0); }
+function earliestExpiry(item){
+  const dates = batchesOf(item).map(b=>b.expiryDate).filter(Boolean).sort();
+  return dates.length ? dates[0] : null;
+}
+
 async function loadInventory(){
   const snap = await getDocs(collection(db,'inventory'));
   INVENTORY = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(a.productName||'').localeCompare(b.productName||''));
   renderAlerts();
+  renderReorderSuggestions();
   renderInventory();
 }
 
 function renderAlerts(){
-  const low = INVENTORY.filter(i => i.lowStockThreshold != null && i.quantityOnHand <= i.lowStockThreshold);
-  const expiring = INVENTORY.filter(i => {
-    const d = daysUntil(i.expiryDate);
-    return d != null && d <= EXPIRY_WARNING_DAYS;
-  });
+  const low = INVENTORY.filter(i => i.lowStockThreshold != null && totalQty(i) <= i.lowStockThreshold);
+  const expiring = [];
+  INVENTORY.forEach(i => batchesOf(i).forEach(b => {
+    const d = daysUntil(b.expiryDate);
+    if (d != null && d <= EXPIRY_WARNING_DAYS && b.quantity > 0) expiring.push({ name: i.productName, days: d });
+  }));
   const box = document.getElementById('alerts-box');
   let html = '';
   if(low.length){
     html += `<div class="alert-banner low"><b>⚠️ Low Stock (${low.length})</b>${low.map(i=>esc(i.productName)).join(', ')}</div>`;
   }
   if(expiring.length){
-    html += `<div class="alert-banner exp"><b>⏰ Expiring Soon / Expired (${expiring.length})</b>${expiring.map(i=>{
-      const d = daysUntil(i.expiryDate);
-      return `${esc(i.productName)} (${d<0?'expired '+Math.abs(d)+'d ago':d===0?'today':'in '+d+'d'})`;
-    }).join(', ')}</div>`;
+    html += `<div class="alert-banner exp"><b>⏰ Expiring Soon / Expired (${expiring.length})</b>${expiring.map(e=>
+      `${esc(e.name)} (${e.days<0?'expired '+Math.abs(e.days)+'d ago':e.days===0?'today':'in '+e.days+'d'})`
+    ).join(', ')}</div>`;
   }
   box.innerHTML = html;
+}
+
+function renderReorderSuggestions(){
+  const low = INVENTORY.filter(i => i.lowStockThreshold != null && totalQty(i) <= i.lowStockThreshold);
+  const section = document.getElementById('reorder-section');
+  const list = document.getElementById('reorder-list');
+  if(low.length === 0){ section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = low.map(i=>{
+    const suggestedQty = i.parLevel != null ? Math.max(i.parLevel - totalQty(i), 0) : null;
+    return `<div class="reorder-card">
+      <div class="rc-info"><b>${esc(i.productName)}</b><span>On hand: ${totalQty(i)} ${esc(i.unit||'')} · Threshold: ${i.lowStockThreshold}${suggestedQty!=null?' · Suggested order: '+suggestedQty+' '+esc(i.unit||''):''}</span></div>
+      <button class="btn btn-sm btn-primary" data-action="create-po" data-id="${i.id}" data-name="${esc(i.productName)}" data-unit="${esc(i.unit||'')}" data-qty="${suggestedQty!=null?suggestedQty:''}">Create Purchase Order</button>
+    </div>`;
+  }).join('');
 }
 
 function renderInventory(){
   const tbody = document.getElementById('inventory-body');
   if(INVENTORY.length===0){ tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No items in the warehouse yet.</td></tr>'; return; }
   tbody.innerHTML = INVENTORY.map(i=>{
-    const isLow = i.lowStockThreshold != null && i.quantityOnHand <= i.lowStockThreshold;
-    const expDays = daysUntil(i.expiryDate);
-    const isExpiring = expDays != null && expDays <= EXPIRY_WARNING_DAYS;
+    const qty = totalQty(i);
+    const isLow = i.lowStockThreshold != null && qty <= i.lowStockThreshold;
+    const batchRows = batchesOf(i).slice().sort((a,b)=>(a.expiryDate||'9999').localeCompare(b.expiryDate||'9999')).map(b=>{
+      const d = daysUntil(b.expiryDate);
+      const cls = d==null ? '' : d < 0 ? 'expired' : d <= EXPIRY_WARNING_DAYS ? 'soon' : '';
+      const expLabel = b.expiryDate ? b.expiryDate + (d!=null && d<=EXPIRY_WARNING_DAYS ? ` (${d<0?'expired':'in '+d+'d'})` : '') : 'no expiry set';
+      return `<div class="batch-row ${cls}">• ${b.quantity} ${esc(i.unit||'')} — ${expLabel}</div>`;
+    }).join('');
     return `<tr>
       <td>${esc(i.productName)}</td>
-      <td class="${isLow?'qty-low':''}">${i.quantityOnHand}${isLow?'<span class="tag tag-low">LOW</span>':''}</td>
+      <td>
+        <span class="${isLow?'qty-low':''}">${qty} ${esc(i.unit||'')}${isLow?'<span class="tag tag-low">LOW</span>':''}</span>
+        <div class="batch-list">${batchRows || 'no batches'}</div>
+      </td>
       <td>${esc(i.unit||'—')}</td>
       <td>${i.lowStockThreshold ?? '—'}</td>
-      <td>${esc(i.expiryDate||'—')}${isExpiring?'<span class="tag tag-exp">SOON</span>':''}</td>
+      <td>${i.parLevel ?? '—'}</td>
       <td class="row-actions-cell">
+        <button class="btn btn-sm" data-action="use" data-id="${i.id}">Use/Remove</button>
         <button class="btn btn-sm" data-action="edit" data-id="${i.id}">Edit</button>
         <button class="btn btn-sm btn-danger" data-action="delete" data-id="${i.id}">Delete</button>
       </td>
@@ -321,11 +382,13 @@ function openStockModal(existing){
   selectedProductId = existing ? existing.id : null;
   document.getElementById('stock-modal-title').textContent = existing ? 'Edit Stock Item' : 'Add Item';
   document.getElementById('product-search-field').style.display = existing ? 'none' : 'block';
+  document.getElementById('new-item-qty-row').style.display = existing ? 'none' : 'grid';
   document.getElementById('i-product-name').value = existing ? existing.productName : '';
-  document.getElementById('i-quantity').value = existing ? existing.quantityOnHand : 0;
+  document.getElementById('i-quantity').value = 0;
+  document.getElementById('i-expiry').value = '';
   document.getElementById('i-unit').value = existing ? (existing.unit||'') : '';
   document.getElementById('i-threshold').value = existing ? (existing.lowStockThreshold ?? '') : '';
-  document.getElementById('i-expiry').value = existing ? (existing.expiryDate||'') : '';
+  document.getElementById('i-par').value = existing ? (existing.parLevel ?? '') : '';
   document.getElementById('product-search').value = '';
   openModal('stock-modal');
 }
@@ -361,21 +424,63 @@ document.addEventListener('click', e=>{
 
 document.getElementById('save-stock-btn').addEventListener('click', async ()=>{
   if(!selectedProductId){ showStatus('Please select a product', false); return; }
-  const quantity = parseFloat(document.getElementById('i-quantity').value) || 0;
   const unit = document.getElementById('i-unit').value.trim();
   const thresholdRaw = document.getElementById('i-threshold').value;
   const threshold = thresholdRaw === '' ? null : parseFloat(thresholdRaw);
-  const expiry = document.getElementById('i-expiry').value || null;
+  const parRaw = document.getElementById('i-par').value;
+  const parLevel = parRaw === '' ? null : parseFloat(parRaw);
   const productName = document.getElementById('i-product-name').value;
+  const existing = INVENTORY.find(i=>i.id===selectedProductId);
   try{
-    await setDoc(doc(db,'inventory',selectedProductId), {
-      productName, quantityOnHand: quantity, unit, lowStockThreshold: threshold, expiryDate: expiry,
-      updatedAt: serverTimestamp()
-    });
+    if(existing){
+      await setDoc(doc(db,'inventory',selectedProductId), {
+        ...existing, unit, lowStockThreshold: threshold, parLevel, updatedAt: serverTimestamp()
+      });
+    } else {
+      const quantity = parseFloat(document.getElementById('i-quantity').value) || 0;
+      const expiry = document.getElementById('i-expiry').value || null;
+      const batch = { id: 'b'+Date.now(), quantity, expiryDate: expiry, unitCost: null, receivedAt: Date.now(), source: 'manual', poId: null, supplierName: null };
+      await setDoc(doc(db,'inventory',selectedProductId), {
+        productName, unit, lowStockThreshold: threshold, parLevel,
+        quantityOnHand: quantity, batches: quantity > 0 ? [batch] : [],
+        updatedAt: serverTimestamp()
+      });
+    }
     closeModal('stock-modal');
     showStatus('Saved');
     await loadInventory();
   }catch(e){ showStatus('Save failed: '+e.message, false); }
+});
+
+let useTargetId = null;
+function openUseModal(item){
+  useTargetId = item.id;
+  document.getElementById('u-product-name').value = item.productName;
+  document.getElementById('u-quantity').value = '';
+  document.getElementById('u-reason').value = '';
+  openModal('use-modal');
+}
+document.getElementById('save-use-btn').addEventListener('click', async ()=>{
+  const item = INVENTORY.find(i=>i.id===useTargetId);
+  if(!item) return;
+  const qty = parseFloat(document.getElementById('u-quantity').value) || 0;
+  if(qty <= 0){ showStatus('Enter a quantity greater than 0', false); return; }
+  let remaining = qty;
+  const batches = batchesOf(item).slice().sort((a,b)=>(a.expiryDate||'9999').localeCompare(b.expiryDate||'9999'));
+  const newBatches = [];
+  for(const b of batches){
+    if(remaining <= 0){ newBatches.push(b); continue; }
+    if(b.quantity <= remaining){ remaining -= b.quantity; }
+    else { newBatches.push({ ...b, quantity: b.quantity - remaining }); remaining = 0; }
+  }
+  if(remaining > 0){ showStatus(`Only ${qty-remaining} ${item.unit||''} available — removed what was in stock`, false); }
+  const newTotal = newBatches.reduce((s,b)=>s+(b.quantity||0),0);
+  try{
+    await setDoc(doc(db,'inventory',item.id), { ...item, batches: newBatches, quantityOnHand: newTotal, updatedAt: serverTimestamp() });
+    closeModal('use-modal');
+    showStatus('Stock updated');
+    await loadInventory();
+  }catch(e){ showStatus('Update failed: '+e.message, false); }
 });
 
 document.getElementById('inventory-body').addEventListener('click', async e=>{
@@ -385,11 +490,22 @@ document.getElementById('inventory-body').addEventListener('click', async e=>{
   if(!item) return;
   if(btn.dataset.action==='edit'){
     openStockModal(item);
+  } else if(btn.dataset.action==='use'){
+    openUseModal(item);
   } else if(btn.dataset.action==='delete'){
     if(!confirm(`Remove "${item.productName}" from the warehouse?`)) return;
     try{ await deleteDoc(doc(db,'inventory',item.id)); showStatus('Removed'); await loadInventory(); }
     catch(e){ showStatus('Delete failed: '+e.message, false); }
   }
+});
+
+document.getElementById('reorder-list').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-action="create-po"]');
+  if(!btn) return;
+  localStorage.setItem('nutriziz_po_prefill', JSON.stringify({
+    productId: btn.dataset.id, productName: btn.dataset.name, unit: btn.dataset.unit, quantity: btn.dataset.qty || ''
+  }));
+  window.location.href = './purchasing.html';
 });
 
 onAuthStateChanged(auth, async (user)=>{

@@ -98,6 +98,7 @@ tr:last-child td{border-bottom:none}
 .row-actions-cell{white-space:nowrap;text-align:right}
 .status-pill{display:inline-block;font-size:.62rem;font-weight:600;padding:3px 9px;border-radius:10px;font-family:var(--mono)}
 .status-pending{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.status-partially_received{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
 .status-received{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 .status-cancelled{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,25,20,.35);z-index:1000;align-items:center;justify-content:center;padding:20px}
@@ -121,6 +122,12 @@ tr:last-child td{border-bottom:none}
 .item-row button{background:none;border:none;color:var(--red);font-size:.9rem;cursor:pointer;padding:0 4px}
 .items-empty{font-size:.75rem;color:var(--muted);padding:6px 2px}
 .total-row{display:flex;justify-content:space-between;font-size:.85rem;font-weight:700;margin-top:12px;padding-top:10px;border-top:1px solid var(--border-light)}
+.receive-item{padding:10px 12px;background:var(--surface2);border-radius:8px;margin-bottom:10px}
+.receive-item .ri-name{font-weight:700;font-size:.8rem;margin-bottom:4px}
+.receive-item .ri-meta{font-size:.68rem;color:var(--muted);margin-bottom:8px}
+.receive-item .ri-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.receive-item label{display:block;font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+.receive-item input{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:5px;font-family:var(--font);font-size:.76rem}
 #status-msg{position:fixed;bottom:20px;right:20px;padding:10px 18px;border-radius:8px;font-size:.8rem;font-weight:600;box-shadow:0 8px 24px rgba(30,42,34,.16);display:none;z-index:2000}
 #status-msg.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 #status-msg.err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
@@ -163,7 +170,7 @@ tr:last-child td{border-bottom:none}
     </div>
   </header>
   <main>
-    <div class="crumbs"><a href="./procurement.html">← Procurement</a> &nbsp;·&nbsp; <a href="./warehouse.html">Warehouse →</a></div>
+    <div class="crumbs"><a href="./procurement.html">← Procurement</a> &nbsp;·&nbsp; <a href="./warehouse.html">Warehouse</a> &nbsp;·&nbsp; <a href="./reports.html">Reports →</a></div>
 
     <div class="section">
       <div class="section-head">
@@ -232,12 +239,26 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<div class="modal-overlay" id="receive-modal">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Receive Order</div><button class="btn" onclick="closeModal('receive-modal')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:.76rem;color:var(--text2);margin-bottom:12px">Enter how much of each item arrived, and its expiry date. Anything not received now stays pending.</p>
+      <div id="receive-items-list"></div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeModal('receive-modal')">Cancel</button>
+        <button class="btn btn-primary" id="save-receive-btn">Confirm Receipt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="status-msg"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, updateDoc, serverTimestamp, increment
+  getFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
@@ -288,6 +309,7 @@ async function loadAllProducts(){
   ALL_PRODUCTS = shardSnaps.flatMap(s=>s.exists()?(s.data().items||[]):[]).filter(r=>r.source==='products');
 }
 function norm(s){ return (s||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }
+function esc(t){ return t ? String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
 async function loadSuppliers(){
   const snap = await getDocs(collection(db,'suppliers'));
@@ -314,24 +336,24 @@ async function loadOrders(){
   ORDERS = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(b.orderDate||'').localeCompare(a.orderDate||''));
   renderOrders();
 }
+function statusLabel(s){ return s==='partially_received' ? 'partial' : s; }
 function renderOrders(){
   const tbody = document.getElementById('orders-body');
   if(ORDERS.length===0){ tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No purchase orders yet.</td></tr>'; return; }
   tbody.innerHTML = ORDERS.map(o=>{
     const total = (o.totalCost||0).toFixed(2);
-    const actions = o.status==='pending'
-      ? `<button class="btn btn-sm btn-primary" data-action="receive" data-id="${o.id}">Mark Received</button>
+    const canReceive = o.status==='pending' || o.status==='partially_received';
+    const actions = canReceive
+      ? `<button class="btn btn-sm btn-primary" data-action="receive" data-id="${o.id}">Receive</button>
          <button class="btn btn-sm" data-action="cancel" data-id="${o.id}">Cancel</button>`
       : '';
     return `<tr>
       <td>${esc(o.supplierName)}</td><td>${esc(o.orderDate||'—')}</td><td>${esc(o.expectedDate||'—')}</td>
-      <td><span class="status-pill status-${o.status}">${o.status}</span></td><td>${total}</td>
+      <td><span class="status-pill status-${o.status}">${statusLabel(o.status)}</span></td><td>${total}</td>
       <td class="row-actions-cell">${actions} <button class="btn btn-sm btn-danger" data-action="delete-order" data-id="${o.id}">Delete</button></td>
     </tr>`;
   }).join('');
 }
-
-function esc(t){ return t ? String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
 
 document.getElementById('add-supplier-btn').addEventListener('click', ()=>{
   document.getElementById('s-name').value=''; document.getElementById('s-contact').value='';
@@ -364,6 +386,22 @@ document.getElementById('add-order-btn').addEventListener('click', async ()=>{
   document.getElementById('o-expected-date').value='';
   document.getElementById('o-notes').value='';
   document.getElementById('item-search').value='';
+
+  // pick up a reorder-suggestion handoff from the Warehouse page, if any
+  const prefillRaw = localStorage.getItem('nutriziz_po_prefill');
+  if(prefillRaw){
+    localStorage.removeItem('nutriziz_po_prefill');
+    try{
+      const prefill = JSON.parse(prefillRaw);
+      currentItems.push({
+        productId: prefill.productId, productName: prefill.productName,
+        quantity: prefill.quantity ? parseFloat(prefill.quantity) : 1,
+        unit: prefill.unit || 'kg', unitPrice: 0
+      });
+      showStatus('Pre-filled from reorder suggestion');
+    }catch(e){}
+  }
+
   renderItems();
   openModal('order-modal');
 });
@@ -433,13 +471,14 @@ document.getElementById('save-order-btn').addEventListener('click', async ()=>{
   if(currentItems.length===0){ showStatus('Add at least one item', false); return; }
   const supplier = SUPPLIERS.find(s=>s.id===supplierId);
   const total = currentItems.reduce((sum,it)=>sum + (it.quantity*it.unitPrice), 0);
+  const itemsWithReceived = currentItems.map(it=>({ ...it, receivedQuantity: 0 }));
   try{
     await addDoc(collection(db,'purchaseOrders'), {
       supplierId, supplierName: supplier ? supplier.name : '',
       orderDate: document.getElementById('o-order-date').value,
       expectedDate: document.getElementById('o-expected-date').value,
       status: 'pending',
-      items: currentItems,
+      items: itemsWithReceived,
       totalCost: total,
       notes: document.getElementById('o-notes').value.trim(),
       createdBy: CURRENT_USER.uid,
@@ -461,6 +500,73 @@ document.getElementById('suppliers-body').addEventListener('click', async e=>{
   }
 });
 
+let receivingOrderId = null;
+function openReceiveModal(order){
+  receivingOrderId = order.id;
+  const box = document.getElementById('receive-items-list');
+  box.innerHTML = order.items.map((it,i)=>{
+    const remaining = it.quantity - (it.receivedQuantity||0);
+    return `<div class="receive-item" data-idx="${i}">
+      <div class="ri-name">${esc(it.productName)}</div>
+      <div class="ri-meta">Ordered: ${it.quantity} ${esc(it.unit)} · Already received: ${it.receivedQuantity||0} ${esc(it.unit)} · Remaining: ${remaining} ${esc(it.unit)}</div>
+      <div class="ri-fields">
+        <div><label>Receive Now</label><input type="number" step="0.01" min="0" max="${remaining}" value="${remaining}" data-field="receiveNow" data-idx="${i}"></div>
+        <div><label>Expiry Date</label><input type="date" data-field="expiryDate" data-idx="${i}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  openModal('receive-modal');
+}
+
+document.getElementById('save-receive-btn').addEventListener('click', async ()=>{
+  const order = ORDERS.find(o=>o.id===receivingOrderId);
+  if(!order) return;
+  const rows = document.querySelectorAll('#receive-items-list .receive-item');
+  const receipts = [];
+  rows.forEach(row=>{
+    const idx = parseInt(row.dataset.idx,10);
+    const qtyInput = row.querySelector('input[data-field="receiveNow"]');
+    const expInput = row.querySelector('input[data-field="expiryDate"]');
+    const receiveNow = parseFloat(qtyInput.value) || 0;
+    if(receiveNow > 0) receipts.push({ idx, receiveNow, expiryDate: expInput.value || null });
+  });
+  if(receipts.length===0){ showStatus('Enter a quantity for at least one item', false); return; }
+
+  try{
+    const newItems = order.items.map(it=>({...it}));
+    for(const r of receipts){
+      const item = newItems[r.idx];
+      const invRef = doc(db,'inventory',item.productId);
+      const invSnap = await getDoc(invRef);
+      const batch = {
+        id: 'b'+Date.now()+'-'+r.idx, quantity: r.receiveNow, expiryDate: r.expiryDate,
+        unitCost: item.unitPrice, receivedAt: Date.now(), source: 'po', poId: order.id, supplierName: order.supplierName
+      };
+      if(invSnap.exists()){
+        const inv = invSnap.data();
+        const batches = [...(inv.batches||[]), batch];
+        const newTotal = batches.reduce((s,b)=>s+(b.quantity||0),0);
+        await setDoc(invRef, { ...inv, batches, quantityOnHand: newTotal, unit: inv.unit || item.unit, updatedAt: serverTimestamp() });
+      } else {
+        await setDoc(invRef, {
+          productName: item.productName, unit: item.unit, lowStockThreshold: null, parLevel: null,
+          quantityOnHand: batch.quantity, batches: [batch], updatedAt: serverTimestamp()
+        });
+      }
+      item.receivedQuantity = (item.receivedQuantity||0) + r.receiveNow;
+    }
+    const allDone = newItems.every(it => (it.receivedQuantity||0) >= it.quantity);
+    const newStatus = allDone ? 'received' : 'partially_received';
+    await updateDoc(doc(db,'purchaseOrders',order.id), {
+      items: newItems, status: newStatus,
+      ...(allDone ? { receivedAt: serverTimestamp() } : {})
+    });
+    closeModal('receive-modal');
+    showStatus(allDone ? 'Order fully received — stock updated' : 'Partial receipt recorded — stock updated');
+    await loadOrders();
+  }catch(e){ showStatus('Failed to receive order: '+e.message, false); }
+});
+
 document.getElementById('orders-body').addEventListener('click', async e=>{
   const btn = e.target.closest('button[data-action]');
   if(!btn) return;
@@ -476,32 +582,7 @@ document.getElementById('orders-body').addEventListener('click', async e=>{
     try{ await updateDoc(doc(db,'purchaseOrders',id), {status:'cancelled'}); showStatus('Order cancelled'); await loadOrders(); }
     catch(e){ showStatus('Update failed: '+e.message, false); }
   } else if(btn.dataset.action==='receive'){
-    if(!confirm('Mark this order as received? This will add the ordered quantities to warehouse stock.')) return;
-    try{
-      for(const item of (order.items||[])){
-        const invRef = doc(db,'inventory',item.productId);
-        const invSnap = await getDoc(invRef);
-        if(invSnap.exists()){
-          await updateDoc(invRef, {
-            quantityOnHand: increment(item.quantity),
-            unit: invSnap.data().unit || item.unit,
-            updatedAt: serverTimestamp()
-          });
-        } else {
-          await setDoc(invRef, {
-            productName: item.productName,
-            quantityOnHand: item.quantity,
-            unit: item.unit,
-            lowStockThreshold: 0,
-            expiryDate: null,
-            updatedAt: serverTimestamp()
-          });
-        }
-      }
-      await updateDoc(doc(db,'purchaseOrders',id), {status:'received', receivedAt: serverTimestamp()});
-      showStatus('Order received — stock updated');
-      await loadOrders();
-    }catch(e){ showStatus('Failed to receive order: '+e.message, false); }
+    openReceiveModal(order);
   }
 });
 
