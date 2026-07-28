@@ -336,6 +336,22 @@ async function loadOrders(){
   ORDERS = snap.docs.map(d=>({id:d.id, ...d.data()})).sort((a,b)=>(b.orderDate||'').localeCompare(a.orderDate||''));
   renderOrders();
 }
+
+// Vendor pricelist: remembers each supplier's most recently quoted price
+// per product, so re-ordering the same item from the same vendor doesn't
+// require re-typing (or re-guessing) the price — mirrors Odoo's vendor
+// pricelist behavior on RFQs.
+function lookupVendorPrice(supplierId, productId){
+  let best = null;
+  ORDERS.forEach(o=>{
+    if(o.supplierId !== supplierId || o.status === 'cancelled') return;
+    (o.items||[]).forEach(it=>{
+      if(it.productId !== productId) return;
+      if(!best || (o.orderDate||'') > best.date) best = { price: it.unitPrice, unit: it.unit, date: o.orderDate };
+    });
+  });
+  return best;
+}
 function statusLabel(s){ return s==='partially_received' ? 'partial' : s; }
 function renderOrders(){
   const tbody = document.getElementById('orders-body');
@@ -423,10 +439,27 @@ itemSearchResults.addEventListener('click', e=>{
   if(!row) return;
   const rec = ALL_PRODUCTS.find(p=>String(p.id)===row.dataset.id);
   if(rec && !currentItems.some(i=>i.productId===String(rec.id))){
-    currentItems.push({ productId:String(rec.id), productName:rec.name, quantity:1, unit:'kg', unitPrice:0 });
+    const supplierId = document.getElementById('o-supplier').value;
+    const vendorPrice = supplierId ? lookupVendorPrice(supplierId, String(rec.id)) : null;
+    currentItems.push({
+      productId:String(rec.id), productName:rec.name, quantity:1,
+      unit: vendorPrice ? vendorPrice.unit : 'kg',
+      unitPrice: vendorPrice ? vendorPrice.price : 0
+    });
+    if(vendorPrice) showStatus(`Vendor price applied: ${vendorPrice.price} (last ordered ${vendorPrice.date})`);
     renderItems();
   }
   itemSearchInput.value=''; itemSearchResults.classList.remove('open');
+});
+document.getElementById('o-supplier').addEventListener('change', ()=>{
+  const supplierId = document.getElementById('o-supplier').value;
+  if(!supplierId || currentItems.length===0) return;
+  let applied = 0;
+  currentItems.forEach(it=>{
+    const vendorPrice = lookupVendorPrice(supplierId, it.productId);
+    if(vendorPrice){ it.unitPrice = vendorPrice.price; it.unit = vendorPrice.unit; applied++; }
+  });
+  if(applied){ renderItems(); showStatus(`Applied vendor pricing to ${applied} item(s)`); }
 });
 document.addEventListener('click', e=>{
   if(!itemSearchResults.contains(e.target) && e.target!==itemSearchInput) itemSearchResults.classList.remove('open');
